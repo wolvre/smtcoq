@@ -21,6 +21,7 @@ val indexed_type_index : indexed_type -> int
 
 type btype =
   | TZ
+  | TR
   | Tbool
   | Tpositive
   | Tindex of indexed_type
@@ -62,6 +63,7 @@ type uop =
    | UO_Zpos 
    | UO_Zneg
    | UO_Zopp
+   | UO_Ropp
 
 type bop = 
    | BO_Zplus
@@ -71,6 +73,13 @@ type bop =
    | BO_Zle
    | BO_Zge
    | BO_Zgt
+   | BO_Rplus
+   | BO_Rminus
+   | BO_Rmult
+   | BO_Rlt
+   | BO_Rle
+   | BO_Rge
+   | BO_Rgt
    | BO_eq of btype
 
 type nop =

@@ -24,6 +24,7 @@ let indexed_type_index i = i.index
 
 type btype =
   | TZ
+  | TR
   | Tbool
   | Tpositive
   | Tindex of indexed_type
@@ -48,12 +49,14 @@ module Btype =
 
     let to_coq = function 
       | TZ -> Lazy.force cTZ
+      | TR -> Lazy.force cTR
       | Tbool -> Lazy.force cTbool
       | Tpositive -> Lazy.force cTpositive
       | Tindex i -> index_to_coq i
 
     let to_smt fmt = function
       | TZ -> Format.fprintf fmt "Int"
+      | TR -> Format.fprintf fmt "Real"
       | Tbool -> Format.fprintf fmt "Bool"
       | Tpositive -> Format.fprintf fmt "Int"
       | Tindex i -> Format.fprintf fmt "Tindex_%i" i.index
@@ -110,6 +113,7 @@ module Btype =
 
     let interp_to_coq reify = function
       | TZ -> Lazy.force cZ
+      | TR -> Lazy.force cR
       | Tbool -> Lazy.force cbool
       | Tpositive -> Lazy.force cpositive
       | Tindex c -> mklApp cte_carrier [|c.hval|]
@@ -128,6 +132,7 @@ type uop =
    | UO_Zpos 
    | UO_Zneg
    | UO_Zopp
+   | UO_Ropp
 
 type bop = 
    | BO_Zplus
@@ -137,6 +142,13 @@ type bop =
    | BO_Zle
    | BO_Zge
    | BO_Zgt
+   | BO_Rplus
+   | BO_Rminus
+   | BO_Rmult
+   | BO_Rlt
+   | BO_Rle
+   | BO_Rge
+   | BO_Rgt
    | BO_eq of btype
 
 type nop =
@@ -179,14 +191,17 @@ module Op =
       | UO_Zpos -> Lazy.force cUO_Zpos 
       | UO_Zneg -> Lazy.force cUO_Zneg
       | UO_Zopp -> Lazy.force cUO_Zopp
+      | UO_Ropp -> Lazy.force cUO_Ropp
 
     let u_type_of = function 
       | UO_xO | UO_xI -> Tpositive
       | UO_Zpos | UO_Zneg | UO_Zopp -> TZ
+      | UO_Ropp -> TR
 
     let u_type_arg = function 
       | UO_xO | UO_xI | UO_Zpos | UO_Zneg -> Tpositive
       | UO_Zopp -> TZ
+      | UO_Ropp -> TR
 
     let interp_uop = function
       | UO_xO -> Lazy.force cxO
@@ -194,6 +209,7 @@ module Op =
       | UO_Zpos -> Lazy.force cZpos
       | UO_Zneg -> Lazy.force cZneg
       | UO_Zopp -> Lazy.force copp
+      | UO_Ropp -> Lazy.force cRopp
 
     let eq_tbl = Hashtbl.create 17 
 
@@ -212,19 +228,30 @@ module Op =
       | BO_Zle -> Lazy.force cBO_Zle
       | BO_Zge -> Lazy.force cBO_Zge
       | BO_Zgt -> Lazy.force cBO_Zgt
+      | BO_Rplus -> Lazy.force cBO_Rplus
+      | BO_Rminus -> Lazy.force cBO_Rminus
+      | BO_Rmult -> Lazy.force cBO_Rmult
+      | BO_Rlt -> Lazy.force cBO_Rlt
+      | BO_Rle -> Lazy.force cBO_Rle
+      | BO_Rge -> Lazy.force cBO_Rge
+      | BO_Rgt -> Lazy.force cBO_Rgt
       | BO_eq t -> eq_to_coq t
 
     let b_type_of = function
       | BO_Zplus | BO_Zminus | BO_Zmult -> TZ
-      | BO_Zlt | BO_Zle | BO_Zge | BO_Zgt | BO_eq _ -> Tbool
+      | BO_Rplus | BO_Rminus | BO_Rmult -> TR
+      | BO_Zlt | BO_Zle | BO_Zge | BO_Zgt |  BO_Rlt | BO_Rle | BO_Rge | BO_Rgt | BO_eq _ -> Tbool
 
     let b_type_args = function
       | BO_Zplus | BO_Zminus | BO_Zmult 
-      | BO_Zlt | BO_Zle | BO_Zge | BO_Zgt -> (TZ,TZ)
+      | BO_Zlt | BO_Zle | BO_Zge | BO_Zgt -> (TZ,TZ) 
+      | BO_Rplus | BO_Rminus | BO_Rmult
+      | BO_Rlt | BO_Rle | BO_Rge | BO_Rgt -> (TR,TR)
       | BO_eq t -> (t,t)
 
     let interp_eq = function
       | TZ -> Lazy.force ceqbZ
+      | TR -> Lazy.force cReqb
       | Tbool -> Lazy.force ceqb
       | Tpositive -> Lazy.force ceqbP
       | Tindex i -> mklApp cte_eqb [|i.hval|]
@@ -237,6 +264,13 @@ module Op =
       | BO_Zle -> Lazy.force cleb
       | BO_Zge -> Lazy.force cgeb
       | BO_Zgt -> Lazy.force cgtb
+      | BO_Rplus -> Lazy.force cRplus
+      | BO_Rminus -> Lazy.force cRminus
+      | BO_Rmult -> Lazy.force cRmult
+      | BO_Rlt -> Lazy.force cRlt
+      | BO_Rle -> Lazy.force cRle
+      | BO_Rge -> Lazy.force cRge
+      | BO_Rgt -> Lazy.force cRgt
       | BO_eq t -> interp_eq t
 
     let n_to_coq = function
@@ -250,6 +284,7 @@ module Op =
 
     let interp_distinct = function
       | TZ -> Lazy.force cZ
+      | TR -> Lazy.force cR
       | Tbool -> Lazy.force cbool
       | Tpositive -> Lazy.force cpositive
       | Tindex i -> mklApp cte_carrier [|i.hval|]
@@ -436,7 +471,8 @@ module Atom =
           | UO_xI -> 2*(compute_hint h) + 1
           | UO_Zpos -> compute_hint h
           | UO_Zneg -> - (compute_hint h)
-          | UO_Zopp -> assert false)
+          | UO_Zopp -> assert false
+	  | _ -> assert false) (* UO_Ropp !!! *)
       | _ -> assert false
 
     and compute_hint h = compute_int (atom h)
@@ -469,13 +505,20 @@ module Atom =
 
     and to_smt_bop fmt op h1 h2 =
       let s = match op with
-        | BO_Zplus -> "+"
-        | BO_Zminus -> "-"
-        | BO_Zmult -> "*"
-        | BO_Zlt -> "<"
-        | BO_Zle -> "<="
-        | BO_Zge -> ">="
-        | BO_Zgt -> ">"
+        | BO_Zplus 
+	| BO_Rplus -> "+"
+        | BO_Zminus
+	| BO_Rminus -> "-"
+        | BO_Zmult 
+	| BO_Rmult -> "*"
+        | BO_Zlt 
+	| BO_Rlt -> "<"
+        | BO_Zle
+	| BO_Rle -> "<="
+        | BO_Zge
+	| BO_Rge -> ">="
+        | BO_Zgt 
+	| BO_Rgt -> ">"
         | BO_eq _ -> "=" in
       Format.fprintf fmt "(%s " s;
       to_smt fmt h1;

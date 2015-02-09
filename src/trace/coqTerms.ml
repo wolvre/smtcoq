@@ -56,6 +56,20 @@ let cgtb = gen_constant z_modules "gtb"
 (* let ceqbZ = gen_constant z_modules "eqb" *)
 let ceqbZ = gen_constant [["Coq";"ZArith";"Zbool"]] "Zeq_bool"
 
+(* R *)
+let r_modules = [["Coq";"Reals"]]
+
+let cR = gen_constant r_modules "R"
+let cRopp = gen_constant r_modules "Ropp"
+let cRplus = gen_constant r_modules "Rplus"
+let cRminus = gen_constant r_modules "Rminus"
+let cRmult = gen_constant r_modules "Rmult"
+let cRlt = gen_constant r_modules "Rlt"
+let cRle = gen_constant r_modules "Rle"
+let cRge = gen_constant r_modules "Rge"
+let cRgt = gen_constant r_modules "Rgt"
+let cReqb= gen_constant r_modules "Reqb"
+
 (* Booleans *)
 let bool_modules = [["Coq";"Bool";"Bool"]]
 
@@ -104,6 +118,7 @@ let cdistinct = gen_constant smt_modules "distinct"
 
 let ctype = gen_constant smt_modules "type"
 let cTZ = gen_constant smt_modules "TZ"
+let cTR = gen_constant smt_modules "TR"
 let cTbool = gen_constant smt_modules "Tbool"
 let cTpositive = gen_constant smt_modules "Tpositive"
 let cTindex = gen_constant smt_modules "Tindex"
@@ -126,6 +141,8 @@ let cUO_Zpos = gen_constant smt_modules "UO_Zpos"
 let cUO_Zneg = gen_constant smt_modules "UO_Zneg"
 let cUO_Zopp = gen_constant smt_modules "UO_Zopp"
 
+let cUO_Ropp = gen_constant smt_modules "UO_Ropp"
+
 let cBO_Zplus = gen_constant smt_modules "BO_Zplus"
 let cBO_Zminus = gen_constant smt_modules "BO_Zminus"
 let cBO_Zmult = gen_constant smt_modules "BO_Zmult"
@@ -133,6 +150,14 @@ let cBO_Zlt = gen_constant smt_modules "BO_Zlt"
 let cBO_Zle = gen_constant smt_modules "BO_Zle"
 let cBO_Zge = gen_constant smt_modules "BO_Zge"
 let cBO_Zgt = gen_constant smt_modules "BO_Zgt"
+
+let cBO_Rplus = gen_constant smt_modules "BO_Rplus"
+let cBO_Rminus = gen_constant smt_modules "BO_Rminus"
+let cBO_Rmult = gen_constant smt_modules "BO_Rmult"
+let cBO_Rlt = gen_constant smt_modules "BO_Rlt"
+let cBO_Rle = gen_constant smt_modules "BO_Rle"
+let cBO_Rge = gen_constant smt_modules "BO_Rge"
+let cBO_Rgt = gen_constant smt_modules "BO_Rgt"
 let cBO_eq = gen_constant smt_modules "BO_eq"
 
 let cNO_distinct = gen_constant smt_modules "NO_distinct"

@@ -16,10 +16,12 @@
 
 Add LoadPath "." as SMTCoq.
 Require Import Bool List Int63 PArray.
+Require Import Reals.
 Require Import Misc State.
 
 Local Open Scope array_scope.
 Local Open Scope int63_scope.
+Local Open Scope R_scope.
 
 Hint Unfold is_true.
 
@@ -266,6 +268,7 @@ Module Typ.
   Inductive type :=
   | Tindex : index -> type
   | TZ : type
+  | TR : type
   | Tbool : type
   | Tpositive : type.
 
@@ -279,6 +282,7 @@ Module Typ.
       match t with
       | Tindex i => (t_i.[i]).(te_carrier)
       | TZ => Z
+      | TR => R
       | Tbool => bool
       | Tpositive => positive
       end.
@@ -294,6 +298,7 @@ Module Typ.
         match t with
         | Tindex i => (t_i.[i]).(te_eqb)
         | TZ => Zeq_bool
+	| TR => Reqb
         | Tbool => Bool.eqb
         | Tpositive => Peqb
         end.
@@ -354,6 +359,7 @@ Module Typ.
         | None => NoCast
         end
       | TZ, TZ => idcast
+      | TR, TR => idcast
       | Tbool, Tbool => idcast
       | Tpositive, Tpositive => idcast
       | _, _ => NoCast
@@ -371,6 +377,7 @@ Module Typ.
       match A, B with
       | Tindex i, Tindex j => i == j
       | TZ, TZ => true
+      | TR, TR => true
       | Tbool, Tbool => true
       | Tpositive, Tpositive => true
       | _, _ => false
@@ -472,7 +479,10 @@ Module Atom.
    | UO_xI
    | UO_Zpos 
    | UO_Zneg
-   | UO_Zopp.
+   | UO_Zopp
+   | UO_Rpos
+   | UO_Rneg
+   | UO_Ropp.
 
   Inductive binop : Type :=
    | BO_Zplus
@@ -482,6 +492,13 @@ Module Atom.
    | BO_Zle
    | BO_Zge
    | BO_Zgt
+   | BO_Rplus
+   | BO_Rminus
+   | BO_Rmult
+   | BO_Rlt
+   | BO_Rle
+   | BO_Rge
+   | BO_Rgt
    | BO_eq (_ : Typ.type).
 
   Inductive nop : Type :=
@@ -513,7 +530,10 @@ Module Atom.
    | UO_xI, UO_xI
    | UO_Zpos, UO_Zpos 
    | UO_Zneg, UO_Zneg
-   | UO_Zopp, UO_Zopp => true
+   | UO_Zopp, UO_Zopp 
+   | UO_Rpos, UO_Rpos
+   | UO_Rneg, UO_Rneg
+   | UO_Ropp, UO_Ropp => true
    | _,_ => false
    end.
 
@@ -525,7 +545,14 @@ Module Atom.
    | BO_Zlt, BO_Zlt
    | BO_Zle, BO_Zle
    | BO_Zge, BO_Zge
-   | BO_Zgt, BO_Zgt => true
+   | BO_Zgt, BO_Zgt 
+   | BO_Rplus, BO_Rplus
+   | BO_Rminus, BO_Rminus
+   | BO_Rmult, BO_Rmult
+   | BO_Rlt, BO_Rlt
+   | BO_Rle, BO_Rle
+   | BO_Rge, BO_Rge
+   | BO_Rgt, BO_Rgt=> true
    | BO_eq t, BO_eq t' => Typ.eqb t t'
    | _,_ => false
    end.
@@ -654,6 +681,9 @@ Module Atom.
         | UO_Zpos => (Typ.Tpositive, Typ.TZ)
         | UO_Zneg => (Typ.Tpositive, Typ.TZ)
         | UO_Zopp => (Typ.TZ, Typ.TZ)
+	| UO_Rpos => (Typ.Tpositive, Typ.TR)
+	| UO_Rneg => (Typ.Tpositive, Typ.TR)
+	| UO_Ropp => (Typ.TR, Typ.TR)
         end.
 
       Definition typ_bop o := 
@@ -665,6 +695,13 @@ Module Atom.
         | BO_Zle    => ((Typ.TZ,Typ.TZ), Typ.Tbool) 
         | BO_Zge    => ((Typ.TZ,Typ.TZ), Typ.Tbool) 
         | BO_Zgt    => ((Typ.TZ,Typ.TZ), Typ.Tbool)
+        | BO_Rplus  => ((Typ.TR,Typ.TR), Typ.TR) 
+        | BO_Rminus => ((Typ.TR,Typ.TR), Typ.TR) 
+        | BO_Rmult  => ((Typ.TR,Typ.TR), Typ.TR) 
+        | BO_Rlt    => ((Typ.TR,Typ.TR), Typ.Tbool) 
+        | BO_Rle    => ((Typ.TR,Typ.TR), Typ.Tbool) 
+        | BO_Rge    => ((Typ.TR,Typ.TR), Typ.Tbool) 
+        | BO_Rgt    => ((Typ.TR,Typ.TR), Typ.Tbool)
         | BO_eq t   => ((t,t),Typ.Tbool)
         end.
 
