@@ -4,9 +4,13 @@ type nt = {nlow : Num.num; nhigh : Num.num}
 
 let nmake l h = {nlow=l; nhigh=h}
 
-let ninfinity = Num.zero (* Num.of_float(infinity) *)
-
-let nneg_infinity = Num.zero (* Num.of_float(neg_infinity) *)
+let ninfinity () = 
+  let _ = Arith_status.set_error_when_null_denominator false in
+  Num.of_float(infinity)
+								   
+let nneg_infinity () = 
+  let _ = Arith_status.set_error_when_null_denominator false in
+  Num.of_float(neg_infinity)
 
 let norder {nlow=l1; nhigh=h1} {nlow=l2; nhigh=h2} =
   (Num.le_num l2 l1) && (Num.le_num h1 h2)

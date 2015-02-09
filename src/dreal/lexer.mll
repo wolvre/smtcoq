@@ -60,7 +60,7 @@ let dec_lit = ['0'-'9']
 let hex_lit = ['0'-'9''a'-'f''A'-'F']
 let hex_number = '-'?"0x" hex_lit ('.' hex_lit+)? 'p' ('+'|'-') dec_lit+
 let float_number = ('+'|'-')? ['0'-'9']+('.'(['0'-'9']*))
-let exp_number =  ('+'|'-')? ['0'-'9']+('e'('+'|'-')['0'-'9']+)
+let exp_number =  ('+'|'-')? ['0'-'9']+('.'(['0'-'9']*))?('e'('+'|'-')['0'-'9']+)
 
 rule start =
   parse blank { start lexbuf }
@@ -95,4 +95,4 @@ rule start =
     | exp_number { verbose (Lexing.lexeme lexbuf); NUM (BatNum.of_float(Float.of_string(Lexing.lexeme lexbuf))) }
     | ('-'?)('0'|['1'-'9']dec_lit*) { verbose (Lexing.lexeme lexbuf); NUM (BatNum.of_string(Lexing.lexeme lexbuf)) }
     | eof { verbose "eof"; EOF}
-    | _ { verbose (Lexing.lexeme lexbuf); EOF }
+    | _ { print_endline(Lexing.lexeme lexbuf); ERROR }

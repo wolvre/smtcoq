@@ -1,5 +1,8 @@
 /*
  * Soonho Kong (soonhok@cs.cmu.edu)
+   Peng Wu (wp@ios.ac.cn)
+
+   - The prefixing "n" means a "new" version.
  *
  */
 
@@ -22,19 +25,26 @@
 %token <string> ID
 %start main
 
-%type <float * Basic.formula list * Ptree.t> main
-%type <Ptree.t> ptree
+%token ERROR
+
+%type <(float * Basic.formula list * Ptree.nt) list> main
+%type <Ptree.nt> ptree
 %type <Basic.formula> con
 %type <Basic.exp> func
 %type <string> branched_on
 %%
 
-main:
-   precision con_list init_list ptree EOF
+main: proof_list { $1 }
+
+proof_list: /* EOF { [] }
+ |*/ proof { [$1] }
+ | proof proof_list  { $1::$2 }
+
+proof: precision con_list init_list ptree
      { ($1, $2, $4) }
- | precision con_list init_list EOF
+ | precision con_list init_list
      { ($1, $2, Ptree.NAxiom (Env.nmake $3)) }
- | precision con_list init_list conflict_detected EOF
+ | precision con_list init_list conflict_detected
      { ($1, $2, Ptree.NAxiom (Env.nmake $3)) }
 
 precision: /* nothing */ { 0.001 } /* default value */
@@ -43,7 +53,6 @@ precision: /* nothing */ { 0.001 } /* default value */
 
 con_list: con          { [$1] }
         | con con_list { $1::$2 }
-;
 
 con: LP EQ func func RP { (Basic.Eq ($3, $4)) }
   |  LP LE func func RP { (Basic.Le ($3, $4)) }
@@ -54,11 +63,9 @@ con: LP EQ func func RP { (Basic.Eq ($3, $4)) }
   |  LP NOT LP LT func func RP RP { (Basic.Ge ($5, $6)) } /* ALWAYS TREAT IT AS GE */
   |  LP NOT LP GE func func RP RP { (Basic.Le ($5, $6)) }
   |  LP NOT LP GT func func RP RP { (Basic.Le ($5, $6)) } /* ALWAYS TREAT IT AS LE */
-;
 
 func_list: func           { [$1] }
          | func func_list { $1::$2 }
-;
 
 func:  FNUM                  { Basic.Num $1 }
      | NUM                  { Basic.NNum $1 }
@@ -85,7 +92,6 @@ func:  FNUM                  { Basic.Num $1 }
      | LP EXP func RP        { Basic.Exp $3 }
      | LP CARET func FNUM RP { Basic.Pow ($3, Basic.Num $4 ) }
      | LP CARET func NUM RP { Basic.Pow ( $3, Basic.NNum $4 ) }
-;
 
 ptree: /* Axiom */
        before_pruning nentry_list conflict_detected
@@ -96,40 +102,47 @@ ptree: /* Axiom */
        /* Branching */
      | branched_on nentry_list ptree ptree
          { Ptree.NBranch (Env.nmake $2, $3, $4) }
+       /* !!! proof error: missing another branch */
+     | branched_on nentry_list ptree EOF
+	 { Ptree.NBranch (Env.nmake $2, $3, Ptree.Hole) }
        /* Pruning */
      | before_pruning nentry_list after_pruning nentry_list ptree
          { Ptree.NPrune (Env.nmake $2, Env.nmake $4, $5) }
-;
-
+       /* !!! conflict_detected used as the delimiter followed by another sub-tree */
+     | before_pruning nentry_list after_pruning nentry_list conflict_detected ptree
+	 { Ptree.NPrune (Env.nmake $2, Env.nmake $4, $6) }
+       /* !!! end of last sub-tree without terminal HOLE */
+     | before_pruning nentry_list after_pruning nentry_list
+	 { Ptree.NPrune (Env.nmake $2, Env.nmake $4, Ptree.Hole) }
+       /* !!! proof error: incomplete pruning */
+     | before_pruning nentry_list EOF
+	 { Ptree.NAxiom (Env.nmake $2) }
+	 
 before_pruning: LB BEFORE PRUNING RB { }
-;
 
 after_pruning: LB AFTER PRUNING RB { }
-;
 
 branched_on: LB BRANCHED ON ID RB { $4 }
-;
 
 conflict_detected: LB CONFLICT DETECTED RB { }
-;
 
 init: nentry SEMICOLON { $1 }
-;
 
 init_list: init { [$1] }
          | init init_list { $1::$2 }
-;
 
 nentry:     
      | ID COLON LB NUM COMMA NUM RB { ($1, Intv.nmake $4 $6) }
-     | ID COLON LP MINUS INFTY COMMA NUM RB { ($1, Intv.nmake Intv.nneg_infinity $7) }
-     | ID COLON LB NUM COMMA PLUS INFTY RP { ($1, Intv.nmake $4 Intv.ninfinity) }
-     | ID COLON LB NUM COMMA INFTY RP { ($1, Intv.nmake $4 Intv.ninfinity) }
+     | ID COLON LP MINUS INFTY COMMA NUM RB { ($1, Intv.nmake (Intv.nneg_infinity()) $7) }
+     | ID COLON LB NUM COMMA PLUS INFTY RP { ($1, Intv.nmake $4 (Intv.ninfinity())) }
+     | ID COLON LB NUM COMMA INFTY RP { ($1, Intv.nmake $4 (Intv.ninfinity())) }
+     | ID COLON LP MINUS INFTY COMMA PLUS INFTY RP { ($1, Intv.nmake (Intv.nneg_infinity()) (Intv.ninfinity())) }
+     | ID COLON LP MINUS INFTY COMMA INFTY RP { ($1, Intv.nmake (Intv.nneg_infinity()) (Intv.ninfinity())) }
      | ID COLON NUM { ($1, Intv.nmake $3 $3) }
-;
 
 nentry_list: nentry { [$1] }
+     | nentry SEMICOLON { [$1] }
      | nentry SEMICOLON nentry_list { $1::$3 }
-;
+
 
 

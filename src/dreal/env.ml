@@ -19,19 +19,31 @@ let to_nlist (e : nt) : (key * nintv) list
 
 let nmake = from_nlist
 
-let coq_nprint out (e : nt)  =
+let coq_nprint_def out (e : nt) i =
   let nenv_list = to_nlist e in
   let print_nenv out (x, {Intv.nlow=l; Intv.nhigh=h}) =
-    Printf.fprintf out "(%s <= %s <= %s)%%R" (Num.to_string l) x (Num.to_string h) in
+(*    Printf.fprintf out "(%s <= %s <= %s)%%R" (Num.to_string l) x (Num.to_string h) in *)
+    Printf.fprintf out "%s <= %s <= %s" (Num.to_string l) x (Num.to_string h) in
+  let _ =
+    List.print ~first:("\nDefinition bounded_"^(string_of_int i)^" ") ~last:" :=\n" ~sep:" "
+	       String.print
+	       out
+	       (List.of_enum (keys e)) in
+  List.print ~first:"" ~last:". \n" ~sep:" /\\\n"
+	     print_nenv
+	     out
+	     nenv_list
+
+let coq_nprint out (e : nt) i  =
   let _ = 
     List.print ~first:"forall " ~last:",\n" ~sep:" "
 	       String.print
 	       out
 	       (List.of_enum (keys e)) in
-  List.print ~first:"" ~last:" -> \n" ~sep:" /\\\n"
-	     print_nenv
+  List.print ~first:("bounded_"^(string_of_int i)^" ") ~last:" ->\n" ~sep:" "
+	     String.print
 	     out
-	     nenv_list
+	     (List.of_enum (keys e))
 
 let nfind (x : key) (e : nt) : nintv
     = Map.find x e
