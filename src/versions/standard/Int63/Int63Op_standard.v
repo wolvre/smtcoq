@@ -15,38 +15,34 @@
 (**************************************************************************)
 
 
+Require Import Int31 Cyclic31.
 Require Export Int63Native.
 Require Import BigNumPrelude.
 Require Import Bvector.
-
-Set Vm Optimize.
 
 
 Local Open Scope int63_scope.
 
 (** The number of digits as a int *)
-Definition digits := 63.
+Definition digits := 31%int31.
 
 (** The bigger int *)
 Definition max_int := Eval vm_compute in 0 - 1.
-Register max_int as PrimInline.
 
 (** Access to the nth digits *)
 Definition get_digit x p := (0 < (x land (1 << p))).
 
 Definition set_digit x p (b:bool) :=
-  if (0 <= p) && (p < digits) then 
+  if (0 <= p) && (p < digits) then
     if b then x lor (1 << p)
     else x land (max_int lxor (1 << p))
   else x.
 
 (** Equality to 0 *)
 Definition is_zero (i:int) := i == 0.
-Register is_zero as PrimInline.
 
 (** Parity *)
 Definition is_even (i:int) := is_zero (i land 1).
-Register is_even as PrimInline.
 
 (** Bit *)
 
@@ -55,100 +51,88 @@ Definition bit i n :=  negb (is_zero ((i >> n) << (digits - 1))).
 
 (** Extra modulo operations *)
 Definition opp (i:int) := 0 - i.
-Register opp as PrimInline.
 Notation "- x" := (opp x) : int63_scope.
 
 Definition oppcarry i := max_int - i.
-Register oppcarry as PrimInline.
 
 Definition succ i := i + 1.
-Register succ as PrimInline.
 
 Definition pred i := i - 1.
-Register pred as PrimInline.
 
 Definition addcarry i j := i + j + 1.
-Register addcarry as PrimInline.
 
 Definition subcarry i j := i - j - 1.
-Register subcarry as PrimInline.
 
 (** Exact arithmetic operations *)
 
 Definition addc_def x y :=
   let r := x + y in
   if r < x then C1 r else C0 r.
-(* the same but direct implementation for effeciancy *)
-Register addc      : int -> int -> carry int as int63_addc.
+(* the same but direct implementation for efficiancy *)
+Definition addc : int -> int -> carry int := add31c.
 Notation "n '+c' m" := (addc n m) (at level 50, no associativity) : int63_scope.
 
 Definition addcarryc_def x y :=
   let r := addcarry x y in
   if r <= x then C1 r else C0 r.
-(* the same but direct implementation for effeciancy *)
-Register addcarryc : int -> int -> carry int as int63_addcarryc.
+(* the same but direct implementation for efficiancy *)
+Definition addcarryc : int -> int -> carry int := add31carryc.
 
-Definition subc_def x y := 
+Definition subc_def x y :=
   if y <= x then C0 (x - y) else C1 (x - y).
-(* the same but direct implementation for effeciancy *)
-Register subc      : int -> int -> carry int as int63_subc.
+(* the same but direct implementation for efficiancy *)
+Definition subc : int -> int -> carry int := sub31c.
 Notation "n '-c' m" := (subc n m) (at level 50, no associativity) : int63_scope.
 
 Definition subcarryc_def x y :=
   if y < x then C0 (x - y - 1) else C1 (x - y - 1).
-(* the same but direct implementation for effeciancy *)
-Register subcarryc : int -> int -> carry int as int63_subcarryc.
+(* the same but direct implementation for efficiancy *)
+Definition subcarryc : int -> int -> carry int := sub31carryc.
 
 Definition diveucl_def x y := (x/y, x\%y).
-(* the same but direct implementation for effeciancy *) 
-Register diveucl   : int -> int -> int * int as int63_diveucl.
+(* the same but direct implementation for efficiancy *)
+Definition diveucl : int -> int -> int * int := div31.
 
-Register diveucl_21    : int -> int -> int -> int * int as int63_div21.
+Definition diveucl_21 : int -> int -> int -> int * int := div3121.
 
 Definition addmuldiv_def p x y :=
   (x << p) lor (y >> (digits - p)).
-Register addmuldiv   : int -> int -> int -> int as int63_addmuldiv.
+(* the same but direct implementation for efficiancy *)
+Definition addmuldiv : int -> int -> int -> int := addmuldiv31.
 
 Definition oppc (i:int) := 0 -c i.
-Register oppc as PrimInline.
 
 Definition succc i := i +c 1.
-Register succc as PrimInline.
 
 Definition predc i := i -c 1.
-Register predc as PrimInline.
 
 (** Comparison *)
 Definition compare_def x y :=
-  if x < y then Lt 
+  if x < y then Lt
   else if (x == y) then Eq else Gt.
 
-Register compare : int -> int -> comparison as int63_compare.
+Definition compare : int -> int -> comparison := compare31.
 Notation "n ?= m" := (compare n m) (at level 70, no associativity) : int63_scope.
 
 (** Exotic operations *)
 
 (** I should add the definition (like for compare) *)
-Register head0 : int -> int as int63_head0.
-Register tail0 : int -> int as int63_tail0.
+Definition head0 : int -> int := head031.
+Definition tail0 : int -> int := tail031.
 
 (** Iterators *)
 
 Definition foldi {A} (f:int -> A -> A) from to :=
   foldi_cont (fun i cont a => cont (f i a)) from to (fun a => a).
-Register foldi as PrimInline.
 
 Definition fold {A} (f: A -> A) from to :=
   foldi_cont (fun i cont a => cont (f a)) from to (fun a => a).
-Register fold as PrimInline.
 
 Definition foldi_down {A} (f:int -> A -> A) from downto :=
   foldi_down_cont (fun i cont a => cont (f i a)) from downto (fun a => a).
-Register foldi_down as PrimInline.
 
 Definition fold_down {A} (f:A -> A) from downto :=
   foldi_down_cont (fun i cont a => cont (f a)) from downto (fun a => a).
-Register fold_down as PrimInline.
 
 Definition forallb (f:int -> bool) from to :=
   foldi_cont (fun i cont _ => if f i then cont tt else false) from to (fun _ => true) tt.
@@ -158,17 +142,19 @@ Definition existsb (f:int -> bool) from to :=
 
 (** Translation to Z *)
 
-Fixpoint to_Z_rec (n:nat) (i:int) :=
-  match n with 
-  | O => 0%Z 
-  | S n => 
-    (if is_even i then Zdouble else Zdouble_plus_one) (to_Z_rec n (i >> 1))
-  end.
+(* Fixpoint to_Z_rec (n:nat) (i:int) := *)
+(*   match n with *)
+(*   | O => 0%Z *)
+(*   | S n => *)
+(*     (if is_even i then Zdouble else Zdouble_plus_one) (to_Z_rec n (i >> 1)) *)
+(*   end. *)
 
-Definition to_Z := to_Z_rec size.
+(* Definition to_Z := to_Z_rec size. *)
+
+Definition to_Z := phi.
 
 Fixpoint of_pos_rec (n:nat) (p:positive) :=
-  match n, p with 
+  match n, p with
   | O, _ => 0
   | S n, xH => 1
   | S n, xO p => (of_pos_rec n p) << 1
@@ -177,7 +163,7 @@ Fixpoint of_pos_rec (n:nat) (p:positive) :=
 
 Definition of_pos := of_pos_rec size.
 
-Definition of_Z z := 
+Definition of_Z z :=
   match z with
   | Zpos p => of_pos p
   | Z0 => 0
@@ -197,7 +183,7 @@ Definition gcd := gcd_rec (2*size).
 
 Definition sqrt_step (rec: int -> int -> int) (i j: int)  :=
   let quo := i/j in
-  if quo < j then rec i ((j + i/j) >> 1)
+  if quo < j then rec i ((j + (i/j)%int) >> 1)
   else j.
 
 Definition iter_sqrt :=
@@ -227,7 +213,7 @@ Definition sqrt2_step (rec: int -> int -> int -> int)
       match j +c quo with
       | C0 m1 => rec ih il (m1 >> 1)
       | C1 m1 => rec ih il ((m1 >> 1) + high_bit)
-      end 
+      end
     else j
   else j.
 
@@ -237,7 +223,7 @@ Definition iter2_sqrt :=
           (rec: int  -> int -> int -> int)
           (ih il j: int) {struct n} : int :=
   sqrt2_step
-   (fun ih il j => 
+   (fun ih il j =>
      match n with
      | O =>  rec ih il j
      | S n => (iter2_sqrt n (iter2_sqrt n rec)) ih il j
@@ -254,19 +240,92 @@ Definition sqrt2 ih il :=
   end.
 
 (* Extra function on equality *)
- 
-Definition cast i j :=
-     (if i == j as b return ((b = true -> i = j) -> option (forall P : int -> Type, P i -> P j))
-      then fun Heq : true = true -> i = j =>
-             Some
-             (fun (P : int -> Type) (Hi : P i) =>
-               match Heq (eq_refl true) in (_ = y) return (P y) with
-               | eq_refl => Hi
-               end)
-      else fun _ : false = true -> i = j => None) (eqb_correct i j).
 
-Definition eqo i j :=
-   (if i == j as b return ((b = true -> i = j) -> option (i=j))
-    then fun Heq : true = true -> i = j =>
-             Some (Heq (eq_refl true))
-     else fun _ : false = true -> i = j => None) (eqb_correct i j).
+Definition cast_digit d1 d2 :
+  option (forall P : Int31.digits -> Type, P d1 -> P d2) :=
+  match d1, d2 with
+  | D0, D0 | D1, D1 => Some (fun P h => h)
+  | _, _ => None
+  end.
+
+(* TODO: improve this definition... *)
+Definition cast i j :
+  option (forall P : int -> Type, P i -> P j) :=
+  match i, j return option (forall P : int -> Type, P i -> P j) with
+  | I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24 d25 d26 d27 d28 d29 d30, I31 d'0 d'1 d'2 d'3 d'4 d'5 d'6 d'7 d'8 d'9 d'10 d'11 d'12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30 =>
+    match
+      cast_digit d0 d'0,
+      cast_digit d1 d'1,
+      cast_digit d2 d'2,
+      cast_digit d3 d'3,
+      cast_digit d4 d'4,
+      cast_digit d5 d'5,
+      cast_digit d6 d'6,
+      cast_digit d7 d'7,
+      cast_digit d8 d'8,
+      cast_digit d9 d'9,
+      cast_digit d10 d'10,
+      cast_digit d11 d'11,
+      cast_digit d12 d'12,
+      cast_digit d13 d'13,
+      cast_digit d14 d'14,
+      cast_digit d15 d'15,
+      cast_digit d16 d'16,
+      cast_digit d17 d'17,
+      cast_digit d18 d'18,
+      cast_digit d19 d'19,
+      cast_digit d20 d'20,
+      cast_digit d21 d'21,
+      cast_digit d22 d'22,
+      cast_digit d23 d'23,
+      cast_digit d24 d'24,
+      cast_digit d25 d'25,
+      cast_digit d26 d'26,
+      cast_digit d27 d'27,
+      cast_digit d28 d'28,
+      cast_digit d29 d'29,
+      cast_digit d30 d'30
+    with
+    | Some k0,
+      Some k1,
+      Some k2,
+      Some k3,
+      Some k4,
+      Some k5,
+      Some k6,
+      Some k7,
+      Some k8,
+      Some k9,
+      Some k10,
+      Some k11,
+      Some k12,
+      Some k13,
+      Some k14,
+      Some k15,
+      Some k16,
+      Some k17,
+      Some k18,
+      Some k19,
+      Some k20,
+      Some k21,
+      Some k22,
+      Some k23,
+      Some k24,
+      Some k25,
+      Some k26,
+      Some k27,
+      Some k28,
+      Some k29,
+      Some k30 =>
+      Some (fun P h =>
+              k0 (fun d0 => P (I31 d0 d'1 d'2 d'3 d'4 d'5 d'6 d'7 d'8 d'9 d'10 d'11 d'12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k1 (fun d1 => P (I31 d0 d1 d'2 d'3 d'4 d'5 d'6 d'7 d'8 d'9 d'10 d'11 d'12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k2 (fun d2 => P (I31 d0 d1 d2 d'3 d'4 d'5 d'6 d'7 d'8 d'9 d'10 d'11 d'12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k3 (fun d3 => P (I31 d0 d1 d2 d3 d'4 d'5 d'6 d'7 d'8 d'9 d'10 d'11 d'12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k4 (fun d4 => P (I31 d0 d1 d2 d3 d4 d'5 d'6 d'7 d'8 d'9 d'10 d'11 d'12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k5 (fun d5 => P (I31 d0 d1 d2 d3 d4 d5 d'6 d'7 d'8 d'9 d'10 d'11 d'12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k6 (fun d6 => P (I31 d0 d1 d2 d3 d4 d5 d6 d'7 d'8 d'9 d'10 d'11 d'12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k7 (fun d7 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d'8 d'9 d'10 d'11 d'12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k8 (fun d8 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d'9 d'10 d'11 d'12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k9 (fun d9 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d'10 d'11 d'12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k10 (fun d10 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d'11 d'12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k11 (fun d11 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d'12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k12 (fun d12 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d'13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k13 (fun d13 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d'14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k14 (fun d14 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d'15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k15 (fun d15 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d'16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k16 (fun d16 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d'17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k17 (fun d17 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d'18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k18 (fun d18 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d'19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k19 (fun d19 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d'20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k20 (fun d20 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d'21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k21 (fun d21 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d'22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k22 (fun d22 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d'23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k23 (fun d23 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d'24 d'25 d'26 d'27 d'28 d'29 d'30)) (k24 (fun d24 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24 d'25 d'26 d'27 d'28 d'29 d'30)) (k25 (fun d25 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24 d25 d'26 d'27 d'28 d'29 d'30)) (k26 (fun d26 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24 d25 d26 d'27 d'28 d'29 d'30)) (k27 (fun d27 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24 d25 d26 d27 d'28 d'29 d'30)) (k28 (fun d28 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24 d25 d26 d27 d28 d'29 d'30)) (k29 (fun d29 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24 d25 d26 d27 d28 d29 d'30)) (k30 (fun d30 => P (I31 d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24 d25 d26 d27 d28 d29 d30)) h)))))))))))))))))))))))))))))))
+    | _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ => None
+    end
+  end.
+
+
+Definition eqo i j : option (i = j) :=
+  match cast i j with
+  | Some k => Some (k (fun j => i = j) (refl_equal i))
+  | None => None
+  end.
