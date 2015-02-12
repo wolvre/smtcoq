@@ -123,3 +123,13 @@ let nminus (e1 : nt) (e2 : nt) : (nt list) =
 			   subt_nenvs
 			   diff_keys))
 
+open CoqTerms
+open SmtMisc
+
+let icp_modules = [ ["SMTCoq";"ICP";"Interval"] ] 
+
+let to_coq (e : nt) =
+  let intv_to_coq {Intv.nlow = l; Intv.nhigh = h} =
+    mklApp cpair [| l; h |] in
+  List.map (fun (_, nintv) -> intv_to_coq nintv) (to_nlist e)
+  

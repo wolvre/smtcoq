@@ -1,5 +1,6 @@
 (*
    Soonho Kong, soonhok@cs.cmu.edu
+   Peng WU, wp@ios.ac.cn
 *)
 open Batteries
 exception Error of string
@@ -94,3 +95,23 @@ let rec check out (pt : nt) (fl : formula list) =
          List.iter (fun nenv_ -> check out (NAxiom nenv_) fl) remainders;
          check out pt' fl
        end
+
+open CoqTerms
+open SmtMisc
+
+let icp_checker_modules = [ ["SMTCoq";"ICP";"ICP_Checker"] ]
+
+let cchecker_icp0 = gen_constant icp_checker_modules "checker_icp0"
+let cchecker_icp1 = gen_constant icp_checker_modules "checker_icp1"
+let cchecker_icp2 = gen_constant icp_checker_modules "checker_icp2"
+
+let rec to_smtcoq (pt : nt) (fl : formula list) =
+  match pt with
+  | Hole -> []
+  | NAxiom e -> [ mklApp cchecker_icp0 [| Env.to_coq e |] ]
+  | NBranch (nenv, pt1, pt2) ->  
+     let env1 = extract_env pt1 in
+     let env2 = extract_env pt2 in
+     (mklApp cchecker_icp2 [| Env.to_coq nenv; Env.to_coq env1; Env.to_coq env2 |])::(List.append (to_smtcoq pt1 fl) (to_smtcoq pt2 fl))
+  | NPrune (nenv1, nenv2, pt') ->
+     (mklApp cchecker_icp1 [| Env.to_coq nenv1; Env.to_coq nenv2 |])::(to_smtcoq pt' fl)
