@@ -1,4 +1,4 @@
-(**************************************************************************)
+  (**************************************************************************)
 (*                                                                        *)
 (*     SMTCoq                                                             *)
 (*     Copyright (C) 2011 - 2015                                          *)
@@ -13,7 +13,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-Require Import Reals ROrderedType.
+Require Import Reals ROrderedType. (* Fcore_Raux *)
 Require Import Bool List Int63 PArray.
 Require Import Misc State.
 
@@ -890,6 +890,23 @@ Module Atom.
         | UO_Ropp => apply_unop Typ.TR Typ.TR Ropp 
         end.
 
+      Definition Rlt_bool x y :=
+      	 match Rcompare x y with
+      	 | Lt => true
+      	 | _ => false
+      	 end.
+      Definition Rle_bool x y :=
+      	 match Rcompare x y with
+      	 | Gt => false
+      	 | _ => true
+      	 end.
+      Definition Rge_bool a b := Rlt_bool b a.
+      Definition Rgt_bool a b := Rle_bool b a.
+      Infix "<=?" := Rle_bool (at level 70, no associativity) : R_scope.
+      Infix "<?" := Rlt_bool (at level 70, no associativity) : R_scope.
+      Infix ">=?" := Rge_bool (at level 70, no associativity) : R_scope.		
+      Infix ">?" := Rgt_bool (at level 70, no associativity) : R_scope.
+
       Definition interp_bop o :=
          match o with
          | BO_Zplus => apply_binop Typ.TZ Typ.TZ Typ.TZ Zplus
@@ -902,10 +919,10 @@ Module Atom.
          | BO_Rplus => apply_binop Typ.TR Typ.TR Typ.TR Rplus
          | BO_Rminus => apply_binop Typ.TR Typ.TR Typ.TR Rminus
          | BO_Rmult => apply_binop Typ.TR Typ.TR Typ.TR Rmult
-         | BO_Rlt => apply_binop Typ.TR Typ.TR Typ.Tbool Rlt
-         | BO_Rle => apply_binop Typ.TR Typ.TR Typ.Tbool Rle
-         | BO_Rge => apply_binop Typ.TR Typ.TR Typ.Tbool Rge
-         | BO_Rgt => apply_binop Typ.TR Typ.TR Typ.Tbool Rgt
+         | BO_Rlt => apply_binop Typ.TR Typ.TR Typ.Tbool Rlt_bool
+         | BO_Rle => apply_binop Typ.TR Typ.TR Typ.Tbool Rle_bool
+         | BO_Rge => apply_binop Typ.TR Typ.TR Typ.Tbool Rge_bool
+         | BO_Rgt => apply_binop Typ.TR Typ.TR Typ.Tbool Rgt_bool
          | BO_eq t => apply_binop t t Typ.Tbool (Typ.i_eqb t_i t)
          end.
 
@@ -1051,18 +1068,27 @@ Module Atom.
       Proof.
         intros [op|op h|op h1 h2|op ha|f l]; simpl.
         (* Constants *)
-        destruct op; intros [i| | | ]; simpl; try discriminate; intros _.
+        destruct op; intros [i| | | | ]; simpl; try discriminate; intros _.
         exists 1%positive; auto.
         exists 0%Z; auto.
         (* Unary operators *)
-        destruct op; intros [i| | | ]; simpl; try discriminate; rewrite Typ.eqb_spec; intro H1; destruct (check_aux_interp_hatom h) as [x Hx]; rewrite Hx; simpl; generalize x Hx; rewrite H1; intros y Hy; rewrite Typ.cast_refl.
+        destruct op; intros [i| | | | ]; simpl; try discriminate; rewrite Typ.eqb_spec; intro H1; destruct (check_aux_interp_hatom h) as [x Hx]; rewrite Hx; simpl; generalize x Hx; rewrite H1; intros y Hy; rewrite Typ.cast_refl.
         exists (y~0)%positive; auto.
         exists (y~1)%positive; auto.
         exists (Zpos y); auto.
         exists (Zneg y); auto.
         exists (- y)%Z; auto.
+        exists (- y)%R; auto.
         (* Binary operators *)
-        destruct op as [ | | | | | | |A]; intros [i| | | ]; simpl; try discriminate; unfold is_true; rewrite andb_true_iff; try (change (Typ.eqb (get_type h1) Typ.TZ = true /\ Typ.eqb (get_type h2) Typ.TZ = true) with (is_true (Typ.eqb (get_type h1) Typ.TZ) /\ is_true (Typ.eqb (get_type h2) Typ.TZ)); rewrite !Typ.eqb_spec; intros [H1 H2]; destruct (check_aux_interp_hatom h1) as [x1 Hx1]; rewrite Hx1; destruct (check_aux_interp_hatom h2) as [x2 Hx2]; rewrite Hx2; simpl; generalize x1 Hx1 x2 Hx2; rewrite H1, H2; intros y1 Hy1 y2 Hy2; rewrite !Typ.cast_refl).
+        destruct op as [ | | | | | | | | | | | | | |A]; intros [i| | | | ]; simpl; 
+        try discriminate; unfold is_true; rewrite andb_true_iff;
+        try (change (Typ.eqb (get_type h1) Typ.TZ = true /\ Typ.eqb (get_type h2) Typ.TZ = true) with 
+        (is_true (Typ.eqb (get_type h1) Typ.TZ) /\ is_true (Typ.eqb (get_type h2) Typ.TZ));
+        change (Typ.eqb (get_type h1) Typ.TR = true /\ Typ.eqb (get_type h2) Typ.TR = true) with 
+        (is_true (Typ.eqb (get_type h1) Typ.TR) /\ is_true (Typ.eqb (get_type h2) Typ.TR));
+        rewrite !Typ.eqb_spec; intros [H1 H2]; destruct (check_aux_interp_hatom h1) as [x1 Hx1]; 
+        rewrite Hx1; destruct (check_aux_interp_hatom h2) as [x2 Hx2]; 
+        rewrite Hx2; simpl; generalize x1 Hx1 x2 Hx2; rewrite H1, H2; intros y1 Hy1 y2 Hy2; rewrite !Typ.cast_refl).
         exists (y1 + y2)%Z; auto.
         exists (y1 - y2)%Z; auto.
         exists (y1 * y2)%Z; auto.
@@ -1070,9 +1096,16 @@ Module Atom.
         exists (y1 <=? y2)%Z; auto.
         exists (y1 >=? y2)%Z; auto.
         exists (y1 >? y2)%Z; auto.
+        exists (y1 + y2)%R; auto.
+        exists (y1 - y2)%R; auto.
+        exists (y1 * y2)%R; auto.
+        exists (y1 <? y2)%R; auto.
+        exists (y1 <=? y2)%R; auto.
+        exists (y1 >=? y2)%R; auto.
+        exists (y1 >? y2)%R; auto.
         change (Typ.eqb (get_type h1) A = true /\ Typ.eqb (get_type h2) A = true) with (is_true (Typ.eqb (get_type h1) A) /\ is_true (Typ.eqb (get_type h2) A)); rewrite !Typ.eqb_spec; intros [H1 H2]; destruct (check_aux_interp_hatom h1) as [x1 Hx1]; rewrite Hx1; destruct (check_aux_interp_hatom h2) as [x2 Hx2]; rewrite Hx2; simpl; generalize x1 Hx1 x2 Hx2; rewrite H1, H2; intros y1 Hy1 y2 Hy2; rewrite !Typ.cast_refl; exists (Typ.i_eqb t_i A y1 y2); auto.
         (* N-ary operators *)
-        destruct op as [A]; simpl; intros [ | | | ]; try discriminate; simpl; intros _; case (compute_interp A nil ha).
+        destruct op as [A]; simpl; intros [ | | | | ]; try discriminate; simpl; intros _; case (compute_interp A nil ha).
         intro l; exists (distinct (Typ.i_eqb t_i A) (rev l)); auto.
         exists true; auto.
         (* Application *)
@@ -1107,7 +1140,11 @@ Module Atom.
         discriminate (H Typ.Tpositive).
         discriminate (H Typ.TZ).
         (* Unary operators *)
-        destruct op; simpl; intro H; destruct (check_aux_interp_hatom h) as [v Hv]; rewrite Hv; simpl; rewrite Typ.neq_cast; try (pose (H2 := H Typ.Tpositive); simpl in H2; rewrite H2; auto); pose (H2 := H Typ.TZ); simpl in H2; rewrite H2; auto.
+        destruct op; simpl; intro H; destruct (check_aux_interp_hatom h) as [v Hv]; 
+        rewrite Hv; simpl; rewrite Typ.neq_cast; 
+        try (pose (H2 := H Typ.Tpositive); simpl in H2; rewrite H2; auto); 
+        try (pose (H2 := H Typ.TZ); simpl in H2; rewrite H2; auto);
+        pose (H2 := H Typ.TR); simpl in H2; rewrite H2; auto.
         (* Binary operators *)
         destruct op; simpl; intro H; destruct (check_aux_interp_hatom h1) as [v1 Hv1]; destruct (check_aux_interp_hatom h2) as [v2 Hv2]; rewrite Hv1, Hv2; simpl; try (pose (H2 := H Typ.TZ); simpl in H2; rewrite andb_false_iff in H2; destruct H2 as [H2|H2]; [rewrite (Typ.neq_cast (get_type h1)), H2|rewrite (Typ.neq_cast (get_type h2)), H2; case (Typ.cast (get_type h1) Typ.TZ)]; auto); try (pose (H2 := H Typ.Tbool); simpl in H2; rewrite andb_false_iff in H2; destruct H2 as [H2|H2]; [rewrite (Typ.neq_cast (get_type h1)), H2|rewrite (Typ.neq_cast (get_type h2)), H2; case (Typ.cast (get_type h1) Typ.TZ)]; auto); case (Typ.cast (get_type h1) t); auto.
         (* N-ary operators *)
