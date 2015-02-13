@@ -3,24 +3,22 @@
 (*     SMTCoq                                                             *)
 (*     Copyright (C) 2011 - 2015                                          *)
 (*                                                                        *)
-(*     Michaël Armand                                                     *)
-(*     Benjamin Grégoire                                                  *)
+(*     Micha\u00ebl Armand                                                     *)
+(*     Benjamin Gr\u00e9goire                                                  *)
 (*     Chantal Keller                                                     *)
 (*                                                                        *)
-(*     Inria - École Polytechnique - MSR-Inria Joint Lab                  *)
+(*     Inria - \u00c9cole Polytechnique - MSR-Inria Joint Lab                  *)
 (*                                                                        *)
 (*   This file is distributed under the terms of the CeCILL-C licence     *)
 (*                                                                        *)
 (**************************************************************************)
 
-
+Require Import Reals ROrderedType.
 Require Import Bool List Int63 PArray.
-Require Import Reals.
 Require Import Misc State.
 
 Local Open Scope array_scope.
 Local Open Scope int63_scope.
-Local Open Scope R_scope.
 
 Hint Unfold is_true.
 
@@ -61,12 +59,12 @@ Module Form.
 
     Section Interp_form.
 
-    (* On suppose qu'on a l'interprétation des litéraux *)
+    (* On suppose qu'on a l'interpr\u00e9tation des lit\u00e9raux *)
       Variable interp_var : var -> bool.
 
-      (* Interprétation d'une formule en supposant l'interprétation
-         des litéraux *)
-      (* (les litéraux font office d'index de hachage) *)
+      (* Interpr\u00e9tation d'une formule en supposant l'interpr\u00e9tation
+         des lit\u00e9raux *)
+      (* (les lit\u00e9raux font office d'index de hachage) *)
       Definition interp_aux (h:form) : bool :=
         match h with
         | Fatom a => interp_atom a
@@ -307,6 +305,7 @@ Module Typ.
        destruct t;simpl;intros.
        symmetry;apply reflect_iff;apply te_reflect.
        symmetry;apply Zeq_is_eq_bool.
+       apply Reqb_eq.
        apply Bool.eqb_true_iff.
        apply Peqb_eq.
       Qed.
@@ -327,18 +326,18 @@ Module Typ.
 
   End Interp.
 
-  (* Plutôt que de tester l'égalité entre deux btypes dans Prop, on
-     écrit une fonction calculant:
-     - si deux btype A et B sont égaux
+  (* Plut\u00f4t que de tester l'\u00e9galit\u00e9 entre deux btypes dans Prop, on
+     \u00e9crit une fonction calculant:
+     - si deux btype A et B sont \u00e9gaux
      - si oui, une fonction permettant de passer les objets de type A en
      objets de type B
-     On montre que cette fonction réfléchit l'égalité de Coq. *)
+     On montre que cette fonction r\u00e9fl\u00e9chit l'\u00e9galit\u00e9 de Coq. *)
 
   Section Cast.
 
-  (* L'inductif cast_result spécifie si deux btype sont égaux (Cast) ou
-     non (NoCast). Dans le cas où ils sont égaux, une fonction permet de
-     passer de l'un à l'autre. *)
+  (* L'inductif cast_result sp\u00e9cifie si deux btype sont \u00e9gaux (Cast) ou
+     non (NoCast). Dans le cas o\u00f9 ils sont \u00e9gaux, une fonction permet de
+     passer de l'un \u00e0 l'autre. *)
 
     Inductive cast_result (A B: type) : Type :=
     | Cast (k: forall P, P A -> P B)
@@ -660,7 +659,7 @@ Module Atom.
       simpl in H1; rewrite Typ.cast_refl in H1; auto.
     Qed.
 
-    (* Interprétation d'une fonction*)
+    (* Interpr\u00e9tation d'une fonction*)
     Variable t_func : PArray.array tval.
 
     (** Type checking of atom assuming an type for hatom *)

@@ -128,8 +128,21 @@ open SmtMisc
 
 let icp_modules = [ ["SMTCoq";"ICP";"Interval"] ] 
 
+let q_module = ["Coq"; "QArith"]
+
+(*
+let coq_constant s =
+  Coqlib.gen_constant_in_modules "SMT" 
+    (Coqlib.init_modules @ Coqlib.arith_modules) s;;
+ *)
+
 let to_coq (e : nt) =
+  let ctype = mklApp clist [| Lazy.force cR |] in
+  let num_to_coq n =
+    Coqlib.coq_constant "SMT" q_module (Num.to_string n) in
   let intv_to_coq {Intv.nlow = l; Intv.nhigh = h} =
-    mklApp cpair [| l; h |] in
-  List.map (fun (_, nintv) -> intv_to_coq nintv) (to_nlist e)
-  
+    mklApp cpair [| num_to_coq l; num_to_coq h |] in
+  List.fold_right 
+    (fun h t -> mklApp ccons [| h; t|]) 
+    (List.map (fun (_, nintv) -> intv_to_coq nintv) (to_nlist e))
+    (mklApp cnil [| ctype |]) 
