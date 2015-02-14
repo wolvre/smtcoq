@@ -17,6 +17,7 @@ Require Import Reals ROrderedType. (* Fcore_Raux *)
 Require Import Bool List Int63 PArray.
 Require Import Misc State.
 
+Local Open Scope R_scope.
 Local Open Scope array_scope.
 Local Open Scope int63_scope.
 
@@ -786,40 +787,19 @@ Module Atom.
         *)
         (* Unary operators w/ TR*)
         destruct op; simpl;
-        try (case (Typ.eqb (get_type h) Typ.Tpositive);
-        [left; exists Typ.Tpositive|right; intro; rewrite andb_false_r]; reflexivity); 
-        try (case (Typ.eqb (get_type h) Typ.Tpositive);
-        [left; exists Typ.Tpositive|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h) Typ.Tpositive);
-        [left; exists Typ.TZ|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h) Typ.Tpositive);
-        [left; exists Typ.TZ|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h) Typ.TZ);
-        [left; exists Typ.TZ|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h) Typ.Tpositive);
-        [left; exists Typ.TR|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h) Typ.Tpositive);
-        [left; exists Typ.TR|right; intro; rewrite andb_false_r]; reflexivity);
-        case (Typ.eqb (get_type h) Typ.TR);
-        [left; exists Typ.TR|right; intro; rewrite andb_false_r]; reflexivity.
+        try (case (Typ.eqb (get_type h) Typ.Tpositive); [left; exists Typ.Tpositive|right; intro; rewrite andb_false_r]; reflexivity); 
+        try (case (Typ.eqb (get_type h) Typ.Tpositive); [left; exists Typ.TZ|right; intro; rewrite andb_false_r]; reflexivity);
+        try (case (Typ.eqb (get_type h) Typ.TZ); [left; exists Typ.TZ|right; intro; rewrite andb_false_r]; reflexivity);
+        try (case (Typ.eqb (get_type h) Typ.Tpositive); [left; exists Typ.TR|right; intro; rewrite andb_false_r]; reflexivity);
+        case (Typ.eqb (get_type h) Typ.TR); [left; exists Typ.TR|right; intro; rewrite andb_false_r]; reflexivity.
         (* Binary operators w/o TR *
         destruct op; simpl; try (case (Typ.eqb (get_type h1) Typ.TZ); [case (Typ.eqb (get_type h2) Typ.TZ); [left; exists Typ.TZ|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity); try (case (Typ.eqb (get_type h1) Typ.TZ); [case (Typ.eqb (get_type h2) Typ.TZ); [left; exists Typ.Tbool|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity); case (Typ.eqb (get_type h1) t); [case (Typ.eqb (get_type h2) t); [left; exists Typ.Tbool|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity.
         *)
         (* Binary operators w/ TR *)
         destruct op; simpl;
         try (case (Typ.eqb (get_type h1) Typ.TZ); [case (Typ.eqb (get_type h2) Typ.TZ); [left; exists Typ.TZ|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h1) Typ.TZ); [case (Typ.eqb (get_type h2) Typ.TZ); [left; exists Typ.TZ|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h1) Typ.TZ); [case (Typ.eqb (get_type h2) Typ.TZ); [left; exists Typ.TZ|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h1) Typ.TZ); [case (Typ.eqb (get_type h2) Typ.TZ); [left; exists Typ.Tbool|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h1) Typ.TZ); [case (Typ.eqb (get_type h2) Typ.TZ); [left; exists Typ.Tbool|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h1) Typ.TZ); [case (Typ.eqb (get_type h2) Typ.TZ); [left; exists Typ.Tbool|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
         try (case (Typ.eqb (get_type h1) Typ.TZ); [case (Typ.eqb (get_type h2) Typ.TZ); [left; exists Typ.Tbool|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
         try (case (Typ.eqb (get_type h1) Typ.TR); [case (Typ.eqb (get_type h2) Typ.TR); [left; exists Typ.TR|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h1) Typ.TR); [case (Typ.eqb (get_type h2) Typ.TR); [left; exists Typ.TR|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h1) Typ.TR); [case (Typ.eqb (get_type h2) Typ.TR); [left; exists Typ.TR|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h1) Typ.TR); [case (Typ.eqb (get_type h2) Typ.TR); [left; exists Typ.Tbool|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h1) Typ.TR); [case (Typ.eqb (get_type h2) Typ.TR); [left; exists Typ.Tbool|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
-        try (case (Typ.eqb (get_type h1) Typ.TR); [case (Typ.eqb (get_type h2) Typ.TR); [left; exists Typ.Tbool|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
         try (case (Typ.eqb (get_type h1) Typ.TR); [case (Typ.eqb (get_type h2) Typ.TR); [left; exists Typ.Tbool|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity);
         case (Typ.eqb (get_type h1) t); [case (Typ.eqb (get_type h2) t); [left; exists Typ.Tbool|right; intro; rewrite andb_false_r]|right; intro; rewrite andb_false_r]; reflexivity.
         (* N-ary operators *)
@@ -890,18 +870,18 @@ Module Atom.
         | UO_Ropp => apply_unop Typ.TR Typ.TR Ropp 
         end.
 
-      Definition Rlt_bool x y :=
+      Definition Rlt_bool (x y:R) :=
       	 match Rcompare x y with
       	 | Lt => true
       	 | _ => false
       	 end.
-      Definition Rle_bool x y :=
+      Definition Rle_bool (x y:R) :=
       	 match Rcompare x y with
       	 | Gt => false
       	 | _ => true
       	 end.
-      Definition Rge_bool a b := Rlt_bool b a.
-      Definition Rgt_bool a b := Rle_bool b a.
+      Definition Rge_bool (x y:R) := Rle_bool y x.
+      Definition Rgt_bool (x y:R) := Rlt_bool y x.
       Infix "<=?" := Rle_bool (at level 70, no associativity) : R_scope.
       Infix "<?" := Rlt_bool (at level 70, no associativity) : R_scope.
       Infix ">=?" := Rge_bool (at level 70, no associativity) : R_scope.		
@@ -1146,7 +1126,15 @@ Module Atom.
         try (pose (H2 := H Typ.TZ); simpl in H2; rewrite H2; auto);
         pose (H2 := H Typ.TR); simpl in H2; rewrite H2; auto.
         (* Binary operators *)
-        destruct op; simpl; intro H; destruct (check_aux_interp_hatom h1) as [v1 Hv1]; destruct (check_aux_interp_hatom h2) as [v2 Hv2]; rewrite Hv1, Hv2; simpl; try (pose (H2 := H Typ.TZ); simpl in H2; rewrite andb_false_iff in H2; destruct H2 as [H2|H2]; [rewrite (Typ.neq_cast (get_type h1)), H2|rewrite (Typ.neq_cast (get_type h2)), H2; case (Typ.cast (get_type h1) Typ.TZ)]; auto); try (pose (H2 := H Typ.Tbool); simpl in H2; rewrite andb_false_iff in H2; destruct H2 as [H2|H2]; [rewrite (Typ.neq_cast (get_type h1)), H2|rewrite (Typ.neq_cast (get_type h2)), H2; case (Typ.cast (get_type h1) Typ.TZ)]; auto); case (Typ.cast (get_type h1) t); auto.
+        destruct op; simpl; intro H; 
+        destruct (check_aux_interp_hatom h1) as [v1 Hv1]; destruct (check_aux_interp_hatom h2) as [v2 Hv2]; rewrite Hv1, Hv2; simpl; 
+        try (pose (H2 := H Typ.TZ); simpl in H2; rewrite andb_false_iff in H2; destruct H2 as [H2|H2]; 
+        [rewrite (Typ.neq_cast (get_type h1)), H2|rewrite (Typ.neq_cast (get_type h2)), H2; case (Typ.cast (get_type h1) Typ.TZ)]; auto); 
+        try (pose (H2 := H Typ.Tbool); simpl in H2; rewrite andb_false_iff in H2; destruct H2 as [H2|H2]; 
+        [rewrite (Typ.neq_cast (get_type h1)), H2|rewrite (Typ.neq_cast (get_type h2)), H2; case (Typ.cast (get_type h1) Typ.TZ); case (Typ.cast (get_type h1) Typ.TR)]; auto);
+        try (pose (H2 := H Typ.TR); simpl in H2; rewrite andb_false_iff in H2; destruct H2 as [H2|H2];
+        [rewrite (Typ.neq_cast (get_type h1)), H2|rewrite (Typ.neq_cast (get_type h2)), H2; case (Typ.cast (get_type h1) Typ.TR)]; auto);
+        case (Typ.cast (get_type h1) t); auto.
         (* N-ary operators *)
         destruct op as [A]; simpl; intro H; generalize (H Typ.Tbool); simpl; clear H; assert (H: forall l1, List.forallb (fun t1 : int => Typ.eqb (get_type t1) A) ha = false -> match compute_interp A l1 ha with | Some l => Bval Typ.Tbool (distinct (Typ.i_eqb t_i A) (rev l)) | None => bvtrue end = bvtrue).
         induction ha as [ |h ha Iha]; simpl.
@@ -1308,21 +1296,29 @@ Module Atom.
         exists 1%positive; auto.
         exists 0%Z; auto.
         (* Unary operators *)
-        intros [ | | | | ] i H; simpl; destruct (IH i H) as [x Hx]; rewrite Hx; simpl.
+        intros [ | | | | | ] i H; simpl; destruct (IH i H) as [x Hx]; rewrite Hx; simpl.
         case (Typ.cast (v_type Typ.type interp_t (a .[ i])) Typ.Tpositive); simpl; try (exists true; auto); intro k; exists ((k interp_t x)~0)%positive; auto.
         case (Typ.cast (v_type Typ.type interp_t (a .[ i])) Typ.Tpositive); simpl; try (exists true; auto); intro k; exists ((k interp_t x)~1)%positive; auto.
         case (Typ.cast (v_type Typ.type interp_t (a .[ i])) Typ.Tpositive); simpl; try (exists true; auto); intro k; exists (Zpos (k interp_t x)); auto.
         case (Typ.cast (v_type Typ.type interp_t (a .[ i])) Typ.Tpositive); simpl; try (exists true; auto); intro k; exists (Zneg (k interp_t x)); auto.
         case (Typ.cast (v_type Typ.type interp_t (a .[ i])) Typ.TZ); simpl; try (exists true; auto); intro k; exists (- k interp_t x)%Z; auto.
+        case (Typ.cast (v_type Typ.type interp_t (a .[ i])) Typ.TR); simpl; try (exists true; auto); intro k; exists (- k interp_t x)%R; auto.
         (* Binary operators *)
-        intros [ | | | | | | |A] h1 h2; simpl; rewrite andb_true_iff; intros [H1 H2]; destruct (IH h1 H1) as [x Hx]; destruct (IH h2 H2) as [y Hy]; rewrite Hx, Hy; simpl.
+        intros [ | | | | | | | | | | | | | |A] h1 h2; simpl; rewrite andb_true_iff; intros [H1 H2]; destruct (IH h1 H1) as [x Hx]; destruct (IH h2 H2) as [y Hy]; rewrite Hx, Hy; simpl.
         case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TZ); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TZ); simpl; try (exists true; auto); intro k2; exists (k1 interp_t x + k2 interp_t y)%Z; auto.
         case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TZ); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TZ); simpl; try (exists true; auto); intro k2; exists (k1 interp_t x - k2 interp_t y)%Z; auto.
         case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TZ); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TZ); simpl; try (exists true; auto); intro k2; exists (k1 interp_t x * k2 interp_t y)%Z; auto.
-        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TZ); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TZ) as [k2| ]; simpl; try (exists true; reflexivity); exists (k1 interp_t x <? k2 interp_t y); auto.
-        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TZ); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TZ) as [k2| ]; simpl; try (exists true; reflexivity); exists (k1 interp_t x <=? k2 interp_t y); auto.
-        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TZ); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TZ) as [k2| ]; simpl; try (exists true; reflexivity); exists (k1 interp_t x >=? k2 interp_t y); auto.
-        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TZ); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TZ) as [k2| ]; simpl; try (exists true; reflexivity); exists (k1 interp_t x >? k2 interp_t y); auto.
+        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TZ); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TZ) as [k2| ]; simpl; try (exists true; reflexivity); exists (k1 interp_t x <? k2 interp_t y)%Z; auto.
+        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TZ); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TZ) as [k2| ]; simpl; try (exists true; reflexivity); exists (k1 interp_t x <=? k2 interp_t y)%Z; auto.
+        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TZ); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TZ) as [k2| ]; simpl; try (exists true; reflexivity); exists (k1 interp_t x >=? k2 interp_t y)%Z; auto.
+        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TZ); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TZ) as [k2| ]; simpl; try (exists true; reflexivity); exists (k1 interp_t x >? k2 interp_t y)%Z; auto.
+        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TR); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TR); simpl; try (exists true; auto); intro k2; exists (k1 interp_t x + k2 interp_t y)%R; auto.
+        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TR); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TR); simpl; try (exists true; auto); intro k2; exists (k1 interp_t x - k2 interp_t y)%R; auto.
+        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TR); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TR); simpl; try (exists true; auto); intro k2; exists (k1 interp_t x * k2 interp_t y)%R; auto.
+        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TR); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TR) as [k2| ]; simpl; try (exists true; reflexivity); exists (Rlt_bool (k1 interp_t x) (k2 interp_t y)); auto.
+        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TR); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TR) as [k2| ]; simpl; try (exists true; reflexivity); exists (Rle_bool (k1 interp_t x) (k2 interp_t y)); auto.
+        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TR); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TR) as [k2| ]; simpl; try (exists true; reflexivity); exists (Rge_bool (k1 interp_t x) (k2 interp_t y)); auto.
+        case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) Typ.TR); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) Typ.TR) as [k2| ]; simpl; try (exists true; reflexivity); exists (Rgt_bool (k1 interp_t x) (k2 interp_t y)); auto.
         case (Typ.cast (v_type Typ.type interp_t (a .[ h1])) A); simpl; try (exists true; auto); intro k1; case (Typ.cast (v_type Typ.type interp_t (a .[ h2])) A) as [k2| ]; simpl; try (exists true; reflexivity); exists (Typ.i_eqb t_i A (k1 interp_t x) (k2 interp_t y)); auto.
         (* N-ary operators *)
         intros [A] l; assert (forall acc, List.forallb (fun h0 : int => h0 < h) l = true -> exists v, match compute_interp (get a) A acc l with | Some l0 => Bval Typ.Tbool (distinct (Typ.i_eqb t_i A) (rev l0)) | None => bvtrue end = Bval (v_type Typ.type interp_t match compute_interp (get a) A acc l with | Some l0 => Bval Typ.Tbool (distinct (Typ.i_eqb t_i A) (rev l0)) | None => bvtrue end) v); auto; induction l as [ |i l IHl]; simpl.
