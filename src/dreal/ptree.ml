@@ -99,7 +99,7 @@ let rec check out (pt : nt) (fl : formula list) =
 open CoqTerms
 open SmtMisc
 
-let icp_checker_modules = [ ["SMTCoq";"ICP";"ICP_Checker"] ]
+let icp_checker_modules = [ ["SMTCoq";"Icp";"ICP_Checker"] ]
 
 let cchecker_icp0 = gen_constant icp_checker_modules "checker_icp0"
 let cchecker_icp1 = gen_constant icp_checker_modules "checker_icp1"

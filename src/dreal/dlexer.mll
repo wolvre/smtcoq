@@ -5,7 +5,7 @@
 {
   open Batteries
   open Error
-  open Parser
+  open Dparser
   
 (* Alternatively one can use BatNum.of_float (float_of_string s). But it may produce unnecessarily large integers at numerators and denominators *) 
   let of_float_string s =

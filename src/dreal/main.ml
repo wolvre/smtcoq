@@ -28,7 +28,7 @@ let run () =
 	try
 	  Filename.chop_extension src_file
 	with Invalid_argument _ -> src_file in
-    let list_proofs = Parser.main Lexer.start lexbuf in
+    let list_proofs = Dparser.main Dlexer.start lexbuf in
     let total = List.length list_proofs in
     let ck_proof p fs pt num =
       let out = 

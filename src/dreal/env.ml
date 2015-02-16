@@ -126,8 +126,6 @@ let nminus (e1 : nt) (e2 : nt) : (nt list) =
 open CoqTerms
 open SmtMisc
 
-let icp_modules = [ ["SMTCoq";"ICP";"Interval"] ] 
-
 let q_module = ["Coq"; "QArith"]
 
 (*

@@ -13,6 +13,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
+Require Import Reals.
 Require Import Bool.
 Require Import List.
 Require Import Int63.
@@ -22,6 +23,7 @@ Require Import ZMicromega.
 Require Import Tauto.
 Require Import Psatz.
 (* Add LoadPath ".." as SMTCoq. *)
+Add LoadPath "dreal" as SMTCoq.icp.
 
 Require Import Misc State.
 Require Import SMT_terms.
@@ -31,29 +33,27 @@ Local Open Scope array_scope.
 Local Open Scope int63_scope.
 Local Open Scope R_scope.
 
-Module Interval
-  
-  Notation interval := R * R
+Module ICP_Checker.
 
-End Interval
+  Inductive interval :=
+    | INTV (low:R) (high:R).
 
-Module ICP_Checker
-  
   Inductive step := 
-    | ICP0 (intv: list interval)							(* an infeasible intv *)
-    | ICP1 (intv: list interval) (intv': list interval) 		      		(* intv' \subseteq intv *) 
-    | ICP2 (intv: list interval) (intv1: list interval) (intv2: list interval) 	(* intv \subseteq intv1 \cup intv2 *).
+    | ICP0 (intv: list interval)								(* an infeasible intv *)
+    | ICP1 (intv: list interval) (intv': list interval) 		      			(* intv' \subseteq intv *) 
+    | ICP2 (intv: list interval) (intv1: list interval) (intv2: list interval). 	(* intv \subseteq intv1 \cup intv2 *)
 
-  Definition check_icp0 intv := sorry
+  Definition check_icp0 (intv: list interval) := true.
   
-  Definition check_icp1 intv intv' := sorry
+  Definition check_icp1 (intv intv': list interval) := true.
 
-  Definition check_icp2 intv intv1 intv2 := sorry
+  Definition check_icp2 (intv intv1 intv2: list interval)  := true.
     
-  Definition step_checker t_form (st:step) :=	
+  Definition step_checker (st:step) :=	
     match st with
-    | ICP0 intv => check_icp0 t_form intv
-    | ICP1 intv intv' => check_icp1 t_form intv intv'
-    | ICP2 intv intv1 intv2 => check_icp2 t_form intv intv1 intv2
+    | ICP0 intv => check_icp0 intv
+    | ICP1 intv intv' => check_icp1 intv intv'
+    | ICP2 intv intv1 intv2 => check_icp2 intv intv1 intv2
+    end.
 
 End ICP_Checker.
