@@ -17,6 +17,7 @@
 
 (* Add LoadPath ".." as SMTCoq. *)
 (* Add LoadPath "../lia" as SMTCoq.lia. *)
+Require Import Reals.
 Require Import List PArray Bool Int63 ZMicromega.
 Require Import Misc State SMT_terms.
 Require Lia.
@@ -62,15 +63,26 @@ Section CheckAtom.
           match o1, o2 with
             | BO_Zplus, BO_Zplus
             | BO_Zmult, BO_Zmult => (check_hatom a1 b1 && check_hatom a2 b2) || (check_hatom a1 b2 && check_hatom a2 b1)
+            | BO_Rplus, BO_Rplus
+            | BO_Rmult, BO_Rmult => (check_hatom a1 b1 && check_hatom a2 b2) || (check_hatom a1 b2 && check_hatom a2 b1)
             | BO_Zminus, BO_Zminus
             | BO_Zlt, BO_Zlt
             | BO_Zle, BO_Zle
             | BO_Zge, BO_Zge
-            | BO_Zgt, BO_Zgt  => check_hatom a1 b1 && check_hatom a2 b2
+            | BO_Zgt, BO_Zgt
+            | BO_Rminus, BO_Rminus
+            | BO_Rlt, BO_Rlt
+            | BO_Rle, BO_Rle
+            | BO_Rge, BO_Rge
+            | BO_Rgt, BO_Rgt  => check_hatom a1 b1 && check_hatom a2 b2
             | BO_Zge, BO_Zle
             | BO_Zle, BO_Zge
             | BO_Zgt, BO_Zlt
-            | BO_Zlt, BO_Zgt => check_hatom a1 b2 && check_hatom a2 b1
+            | BO_Zlt, BO_Zgt
+            | BO_Rge, BO_Rle
+            | BO_Rle, BO_Rge
+            | BO_Rgt, BO_Rlt
+            | BO_Rlt, BO_Rgt => check_hatom a1 b2 && check_hatom a2 b1
             | BO_eq t1, BO_eq t2 =>
               Typ.eqb t1 t2 &&
               ((check_hatom a1 b1 && check_hatom a2 b2) ||
@@ -120,8 +132,8 @@ Section CheckAtom.
       (* Unary operators *)
       intros [op2|op2 i2|op2 i2 j2|op2 li2|f2 args2]; simpl; try discriminate; try (case op1; discriminate).
       case op1; case op2; try discriminate; try (unfold is_true; rewrite andb_true_iff; intros [_ H]; rewrite (check_hatom_correct _ _ H); auto).
-      case_eq (get_atom i2); try discriminate; intros [ | | | | ] i Heq H; try discriminate; simpl; unfold apply_unop; rewrite (check_hatom_correct _ _ H); unfold interp_hatom; rewrite (t_interp_wf _ _ _ Hwf Hd i2), Heq; simpl; unfold apply_unop; destruct (t_interp t_i t_func t_atom .[ i]) as [A v]; destruct (Typ.cast A Typ.Tpositive) as [k| ]; auto.
-      case_eq (get_atom i1); try discriminate; intros [ | | | | ] i Heq H; try discriminate; simpl; unfold apply_unop; rewrite <- (check_hatom_correct _ _ H); unfold interp_hatom; rewrite (t_interp_wf _ _ _ Hwf Hd i1), Heq; simpl; unfold apply_unop; destruct (t_interp t_i t_func t_atom .[ i]) as [A v]; destruct (Typ.cast A Typ.Tpositive) as [k| ]; auto.
+      case_eq (get_atom i2); try discriminate; intros [ | | | | | ] i Heq H; try discriminate; simpl; unfold apply_unop; rewrite (check_hatom_correct _ _ H); unfold interp_hatom; rewrite (t_interp_wf _ _ _ Hwf Hd i2), Heq; simpl; unfold apply_unop; destruct (t_interp t_i t_func t_atom .[ i]) as [A v]; destruct (Typ.cast A Typ.Tpositive) as [k| ]; auto.
+      case_eq (get_atom i1); try discriminate; intros [ | | | | | ] i Heq H; try discriminate; simpl; unfold apply_unop; rewrite <- (check_hatom_correct _ _ H); unfold interp_hatom; rewrite (t_interp_wf _ _ _ Hwf Hd i1), Heq; simpl; unfold apply_unop; destruct (t_interp t_i t_func t_atom .[ i]) as [A v]; destruct (Typ.cast A Typ.Tpositive) as [k| ]; auto.
       (* Binary operators *)
       intros [op2|op2 i2|op2 i2 j2|op2 li2|f2 args2]; simpl; try discriminate; case op1; case op2; try discriminate; try (unfold is_true; rewrite andb_true_iff; intros [H1 H2]; rewrite (check_hatom_correct _ _ H1), (check_hatom_correct _ _ H2); auto).
       unfold is_true, interp_bop, apply_binop. rewrite orb_true_iff, !andb_true_iff. intros [[H1 H2]|[H1 H2]]; rewrite (check_hatom_correct _ _ H1), (check_hatom_correct _ _ H2); destruct (interp_hatom t_i t_func t_atom i2) as [A v1]; destruct (interp_hatom t_i t_func t_atom j2) as [B v2]; destruct (Typ.cast B Typ.TZ) as [k2| ]; destruct (Typ.cast A Typ.TZ) as [k1| ]; auto; rewrite Z.add_comm; reflexivity.
@@ -130,6 +142,14 @@ Section CheckAtom.
       unfold interp_bop, apply_binop; destruct (interp_hatom t_i t_func t_atom j2) as [B v2]; destruct (interp_hatom t_i t_func t_atom i2) as [A v1]; destruct (Typ.cast B Typ.TZ) as [k2| ]; destruct (Typ.cast A Typ.TZ) as [k1| ]; auto; rewrite Z.geb_leb; auto.
       unfold interp_bop, apply_binop; destruct (interp_hatom t_i t_func t_atom j2) as [B v2]; destruct (interp_hatom t_i t_func t_atom i2) as [A v1]; destruct (Typ.cast B Typ.TZ) as [k2| ]; destruct (Typ.cast A Typ.TZ) as [k1| ]; auto; rewrite Z.geb_leb; auto.
       unfold interp_bop, apply_binop; destruct (interp_hatom t_i t_func t_atom j2) as [B v2]; destruct (interp_hatom t_i t_func t_atom i2) as [A v1]; destruct (Typ.cast B Typ.TZ) as [k2| ]; destruct (Typ.cast A Typ.TZ) as [k1| ]; auto; rewrite Z.gtb_ltb; auto.
+
+      unfold is_true, interp_bop, apply_binop. rewrite orb_true_iff, !andb_true_iff. intros [[H1 H2]|[H1 H2]]; rewrite (check_hatom_correct _ _ H1), (check_hatom_correct _ _ H2); destruct (interp_hatom t_i t_func t_atom i2) as [A v1]; destruct (interp_hatom t_i t_func t_atom j2) as [B v2]; destruct (Typ.cast B Typ.TR) as [k2| ]; destruct (Typ.cast A Typ.TR) as [k1| ]; auto; rewrite Rplus_comm; reflexivity.
+      unfold is_true, interp_bop, apply_binop. rewrite orb_true_iff, !andb_true_iff. intros [[H1 H2]|[H1 H2]]; rewrite (check_hatom_correct _ _ H1), (check_hatom_correct _ _ H2); destruct (interp_hatom t_i t_func t_atom i2) as [A v1]; destruct (interp_hatom t_i t_func t_atom j2) as [B v2]; destruct (Typ.cast B Typ.TR) as [k2| ]; destruct (Typ.cast A Typ.TR) as [k1| ]; auto; rewrite Rmult_comm; reflexivity.
+      unfold interp_bop, apply_binop; destruct (interp_hatom t_i t_func t_atom j2) as [B v2]; destruct (interp_hatom t_i t_func t_atom i2) as [A v1]; destruct (Typ.cast B Typ.TR) as [k2| ]; destruct (Typ.cast A Typ.TR) as [k1| ]; auto; rewrite Rgt_lt; auto.
+      unfold interp_bop, apply_binop; destruct (interp_hatom t_i t_func t_atom j2) as [B v2]; destruct (interp_hatom t_i t_func t_atom i2) as [A v1]; destruct (Typ.cast B Typ.TR) as [k2| ]; destruct (Typ.cast A Typ.TR) as [k1| ]; auto; rewrite Rge_le; auto.
+      unfold interp_bop, apply_binop; destruct (interp_hatom t_i t_func t_atom j2) as [B v2]; destruct (interp_hatom t_i t_func t_atom i2) as [A v1]; destruct (Typ.cast B Typ.TR) as [k2| ]; destruct (Typ.cast A Typ.TR) as [k1| ]; auto; rewrite Rge_le; auto.
+      unfold interp_bop, apply_binop; destruct (interp_hatom t_i t_func t_atom j2) as [B v2]; destruct (interp_hatom t_i t_func t_atom i2) as [A v1]; destruct (Typ.cast B Typ.TR) as [k2| ]; destruct (Typ.cast A Typ.TR) as [k1| ]; auto; rewrite Rgt_lt; auto.
+
       intros A B; unfold is_true; rewrite andb_true_iff, orb_true_iff; change (Typ.eqb B A = true) with (is_true (Typ.eqb B A)); rewrite Typ.eqb_spec; intros [H2 [H1|H1]]; subst B; rewrite andb_true_iff in H1; destruct H1 as [H1 H2]; rewrite (check_hatom_correct _ _ H1), (check_hatom_correct _ _ H2); auto; simpl; unfold apply_binop; destruct (interp_hatom t_i t_func t_atom j2) as [B v1]; destruct (interp_hatom t_i t_func t_atom i2) as [C v2]; destruct (Typ.cast B A) as [k1| ]; destruct (Typ.cast C A) as [k2| ]; auto; rewrite Typ.i_eqb_sym; auto.
       (* N-ary operators *)
       intros [op2|op2 i2|op2 i2 j2|op2 li2|f2 args2]; simpl; try discriminate; destruct op1 as [t1]; destruct op2 as [t2]; unfold is_true; rewrite andb_true_iff; change (Typ.eqb t1 t2 = true) with (is_true (Typ.eqb t1 t2)); rewrite Typ.eqb_spec; intros [H1 H2]; subst t2; rewrite (list_beq_compute_interp _ _ _ H2); auto.
@@ -157,7 +177,15 @@ Section CheckAtom.
           | BO_Zge, BO_Zlt => check_hatom a1 b1 && check_hatom a2 b2
           | BO_Zge, BO_Zgt => check_hatom a1 b2 && check_hatom a2 b1
           | BO_Zgt, BO_Zle => check_hatom a1 b1 && check_hatom a2 b2
-          | BO_Zgt, BO_Zge => check_hatom a1 b2 && check_hatom a2 b1
+          | BO_Zgt, BO_Zge => check_hatom a1 b2 && check_hatom a2 b1 (*
+          | BO_Rlt, BO_Rle => check_hatom a1 b2 && check_hatom a2 b1
+          | BO_Rlt, BO_Rge => check_hatom a1 b1 && check_hatom a2 b2
+          | BO_Rle, BO_Rlt => check_hatom a1 b2 && check_hatom a2 b1
+          | BO_Rle, BO_Rgt => check_hatom a1 b1 && check_hatom a2 b2
+          | BO_Rge, BO_Rlt => check_hatom a1 b1 && check_hatom a2 b2
+          | BO_Rge, BO_Rgt => check_hatom a1 b2 && check_hatom a2 b1
+          | BO_Rgt, BO_Rle => check_hatom a1 b1 && check_hatom a2 b2
+          | BO_Rgt, BO_Rge => check_hatom a1 b2 && check_hatom a2 b1 *)
           | _, _ => false
         end
       | _, _ => false
@@ -218,7 +246,7 @@ Section CheckAtom.
         | Val _ _, Val _ _ => False
       end.
   Proof.
-    unfold wt; unfold is_true at 1; rewrite forallbi_spec; intros Hwt Hwf Hdef h1 h2; unfold check_neg_hatom; case_eq (get_atom h1); try discriminate; intros b1 t11 t12 H1; case_eq (get_atom h2); try discriminate; intros b2 t21 t22 H2; assert (H7: h1 < length t_atom) by (apply PArray.get_not_default_lt; rewrite H1, Hdef; discriminate); generalize (Hwt _ H7); rewrite H1; simpl; generalize H1; case b1; try discriminate; clear H1 b1; simpl; intro H1; case (get_type' t_i (t_interp t_i t_func t_atom) h1); try discriminate; simpl; rewrite andb_true_iff; intros [H30 H31]; change (is_true (Typ.eqb (get_type' t_i (t_interp t_i t_func t_atom) t11) Typ.TZ)) in H30; change (is_true (Typ.eqb (get_type' t_i (t_interp t_i t_func t_atom) t12) Typ.TZ)) in H31; rewrite Typ.eqb_spec in H30, H31; generalize (check_aux_interp_hatom _ t_func _ Hwf t11), (check_aux_interp_hatom _ t_func _ Hwf t12); rewrite H30, H31; intros [v1 Hv1] [v2 Hv2]; generalize H2; case b2; try discriminate; clear H2 b2; intro H2; unfold is_true; rewrite andb_true_iff; intros [H3 H4]; generalize (check_hatom_correct Hwf Hdef _ _ H3), (check_hatom_correct Hwf Hdef _ _ H4); unfold interp_hatom; intros H5 H6; rewrite t_interp_wf; auto; rewrite H1; simpl; rewrite Hv1, Hv2; simpl; rewrite t_interp_wf; auto; rewrite H2; simpl; rewrite <- H5; rewrite <- H6, Hv1, Hv2; simpl.
+    unfold wt; unfold is_true at 1; rewrite forallbi_spec; intros Hwt Hwf Hdef h1 h2; unfold check_neg_hatom; case_eq (get_atom h1); try discriminate; intros b1 t11 t12 H1; case_eq (get_atom h2); try discriminate; intros b2 t21 t22 H2; assert (H7: h1 < length t_atom) by (apply PArray.get_not_default_lt; rewrite H1, Hdef; discriminate); generalize (Hwt _ H7); rewrite H1; simpl; generalize H1; case b1; try discriminate; clear H1 b1; simpl; intro H1; case (get_type' t_i (t_interp t_i t_func t_atom) h1); try discriminate; simpl; rewrite andb_true_iff; intros [H30 H31]; try (change (is_true (Typ.eqb (get_type' t_i (t_interp t_i t_func t_atom) t11) Typ.TZ)) in H30; change (is_true (Typ.eqb (get_type' t_i (t_interp t_i t_func t_atom) t12) Typ.TZ)) in H31; rewrite Typ.eqb_spec in H30, H31; generalize (check_aux_interp_hatom _ t_func _ Hwf t11), (check_aux_interp_hatom _ t_func _ Hwf t12); rewrite H30, H31; intros [v1 Hv1] [v2 Hv2]; generalize H2; case b2; try discriminate; clear H2 b2; intro H2; unfold is_true; rewrite andb_true_iff; intros [H3 H4]; generalize (check_hatom_correct Hwf Hdef _ _ H3), (check_hatom_correct Hwf Hdef _ _ H4); unfold interp_hatom; intros H5 H6; rewrite t_interp_wf; auto; rewrite H1; simpl; rewrite Hv1, Hv2; simpl; rewrite t_interp_wf; auto; rewrite H2; simpl; rewrite <- H5; rewrite <- H6, Hv1, Hv2; simpl).
     rewrite Z.ltb_antisym; auto.
     rewrite Z.geb_leb, Z.ltb_antisym; auto.
     rewrite Z.leb_antisym; auto.
@@ -235,7 +263,7 @@ Section CheckAtom.
     forall h1 h2, check_neg_hatom h1 h2 ->
       interp_form_hatom t_i t_func t_atom h1 = negb (interp_form_hatom t_i t_func t_atom h2).
   Proof.
-    unfold interp_form_hatom. intros Hwt H1 H2 h1 h2 H3. unfold interp_bool. generalize (check_neg_hatom_correct Hwt H1 H2 _ _ H3). case (interp_hatom t_i t_func t_atom h1). case (interp_hatom t_i t_func t_atom h2). simpl. intros [i| | | ] v1 [j| | | ] v2; intro H; inversion H. rewrite Typ.cast_refl. auto.
+    unfold interp_form_hatom. intros Hwt H1 H2 h1 h2 H3. unfold interp_bool. generalize (check_neg_hatom_correct Hwt H1 H2 _ _ H3). case (interp_hatom t_i t_func t_atom h1). case (interp_hatom t_i t_func t_atom h2). simpl. intros [i| | | | ] v1 [j| | | | ] v2; intro H; inversion H. rewrite Typ.cast_refl. auto.
   Qed.
 
 End CheckAtom.
