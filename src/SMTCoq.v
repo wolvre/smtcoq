@@ -15,6 +15,6 @@
 
 Require Export Int63 List PArray.
 Require Export State SMT_terms Trace Icp.
-Export Atom Form Sat_Checker Cnf_Checker Euf_Checker ICP_Checker.
+Export Atom Form Sat_Checker Cnf_Checker Euf_Checker Icp_Checker.
 
 Declare ML Module "trace/smt_tactic".

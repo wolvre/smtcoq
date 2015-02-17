@@ -33,7 +33,7 @@ Local Open Scope array_scope.
 Local Open Scope int63_scope.
 Local Open Scope R_scope.
 
-Module ICP_Checker.
+Module Icp_Checker.
 
   Inductive interval :=
     | INTV (low:R) (high:R).
@@ -56,4 +56,4 @@ Module ICP_Checker.
     | ICP2 intv intv1 intv2 => check_icp2 intv intv1 intv2
     end.
 
-End ICP_Checker.
+End Icp_Checker.

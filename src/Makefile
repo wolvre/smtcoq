@@ -103,10 +103,10 @@ COQSRCLIBS?=-I "$(COQLIB)kernel" -I "$(COQLIB)lib" \
   -I "$(COQLIB)plugins/"xml
 ZFLAGS=$(OCAMLLIBS) $(COQSRCLIBS) -I $(CAMLP4LIB)
 
-CAMLC?=ocamlfind $(OCAMLC) -c -rectypes -package batteries
-CAMLOPTC?=ocamlfind $(OCAMLOPT) -c -rectypes -package batteries
-CAMLLINK?=ocamlfind $(OCAMLC) -rectypes -package batteries
-CAMLOPTLINK?=ocamlfind $(OCAMLOPT) -rectypes -package batteries
+CAMLC?=ocamlfind $(OCAMLC) -package batteries -c -rectypes
+CAMLOPTC?=ocamlfind $(OCAMLOPT) -package batteries -c -rectypes
+CAMLLINK?=ocamlfind $(OCAMLC) -rectypes
+CAMLOPTLINK?=ocamlfind $(OCAMLOPT) -package batteries -rectypes
 GRAMMARS?=grammar.cma
 CAMLP4EXTEND?=pa_extend.cmo pa_macro.cmo q_MLast.cmo
 CAMLP4OPTIONS?=-loc loc
@@ -190,7 +190,7 @@ MLFILES:=lia/lia.ml\
   dreal/ptree.ml\
   dreal/dparser.ml\
   dreal/dlexer.ml\
-  dreal/main.ml\
+  dreal/dreal.ml\
   trace/smtTrace.ml\
   trace/smtMisc.ml\
   trace/smtForm.ml\
@@ -279,9 +279,9 @@ beautify: $(VFILES:=.beautified)
 ###################
 
 $(CMXS): $(CMXA)
-	$(CAMLOPTLINK) $(ZFLAGS) -o $@ -linkall -shared $^
+	$(CAMLOPTLINK) $(ZFLAGS) -o $@ -linkall -linkpkg -shared $^
 
-$(CMXA): versions/standard/structures.cmx trace/smtMisc.cmx trace/coqTerms.cmx trace/smtForm.cmx trace/smtCertif.cmx trace/smtTrace.cmx trace/smtCnf.cmx trace/satAtom.cmx trace/smtAtom.cmx zchaff/satParser.cmx zchaff/zchaffParser.cmx zchaff/cnfParser.cmx zchaff/zchaff.cmx verit/smtlib2_util.cmx verit/smtlib2_ast.cmx verit/smtlib2_parse.cmx verit/smtlib2_lex.cmx lia/lia.cmx verit/veritSyntax.cmx verit/veritParser.cmx verit/veritLexer.cmx verit/smtlib2_genConstr.cmx verit/verit.cmx trace/smt_tactic.cmx dreal/error.cmx dreal/intv.cmx dreal/basic.cmx dreal/env.cmx dreal/ptree.cmx dreal/dparser.cmx dreal/dlexer.cmx dreal/main.cmx
+$(CMXA): versions/standard/structures.cmx trace/smtMisc.cmx trace/coqTerms.cmx trace/smtForm.cmx trace/smtCertif.cmx trace/smtTrace.cmx trace/smtCnf.cmx trace/satAtom.cmx trace/smtAtom.cmx zchaff/satParser.cmx zchaff/zchaffParser.cmx zchaff/cnfParser.cmx zchaff/zchaff.cmx verit/smtlib2_util.cmx verit/smtlib2_ast.cmx verit/smtlib2_parse.cmx verit/smtlib2_lex.cmx lia/lia.cmx verit/veritSyntax.cmx verit/veritParser.cmx verit/veritLexer.cmx verit/smtlib2_genConstr.cmx verit/verit.cmx trace/smt_tactic.cmx dreal/error.cmx dreal/intv.cmx dreal/basic.cmx dreal/env.cmx dreal/ptree.cmx dreal/dparser.cmx dreal/dlexer.cmx dreal/dreal.cmx
 	$(CAMLOPTLINK) $(ZFLAGS) -a -o $@ $^
 
 ml: verit/veritParser.ml verit/veritLexer.ml verit/smtlib2_parse.ml verit/smtlib2_lex.ml dreal/dlexer.ml dreal/dparser.ml

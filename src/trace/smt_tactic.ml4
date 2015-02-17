@@ -46,6 +46,13 @@ VERNAC COMMAND EXTEND Parse_certif_verit
   ]
 END
 
+VERNAC COMMAND EXTEND Parse_certif_dreal
+| [ "DReal_Checker" string(fdproof) ] ->
+  [
+    Dreal.checker fdproof
+  ]
+END
+
 TACTIC EXTEND zchaff
 | [ "zchaff" ] -> [ Zchaff.tactic ]
 END
