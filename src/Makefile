@@ -40,16 +40,12 @@ $(call includecmdwithout@,$(COQBIN)coqtop -config)
 ##########################
 
 OCAMLLIBS?=-I versions/standard\
-  -I zchaff\
-  -I verit\
   -I dreal\
   -I trace\
   -I lia\
   -I euf\
   -I cnf
 COQLIBS?=-I versions/standard\
-  -I zchaff\
-  -I verit\
   -I dreal\
   -I trace\
   -I lia\
@@ -170,27 +166,14 @@ ML4FILES:=trace/smt_tactic.ml4
 .SECONDARY: $(addsuffix .d,$(ML4FILES))
 
 MLFILES:=lia/lia.ml\
-  zchaff/zchaffParser.ml\
-  zchaff/zchaff.ml\
-  zchaff/satParser.ml\
-  zchaff/cnfParser.ml\
-  verit/veritSyntax.ml\
-  verit/verit.ml\
-  verit/veritLexer.ml\
-  verit/veritParser.ml\
-  verit/smtlib2_util.ml\
-  verit/smtlib2_parse.ml\
-  verit/smtlib2_lex.ml\
-  verit/smtlib2_genConstr.ml\
-  verit/smtlib2_ast.ml\
   dreal/error.ml\
   dreal/intv.ml\
   dreal/basic.ml\
   dreal/env.ml\
   dreal/ptree.ml\
+  dreal/dreal.ml\
   dreal/dparser.ml\
   dreal/dlexer.ml\
-  dreal/dreal.ml\
   trace/smtTrace.ml\
   trace/smtMisc.ml\
   trace/smtForm.ml\
@@ -204,8 +187,7 @@ MLFILES:=lia/lia.ml\
 -include $(addsuffix .d,$(MLFILES))
 .SECONDARY: $(addsuffix .d,$(MLFILES))
 
-MLIFILES:=verit/veritSyntax.mli\
-  trace/smtForm.mli\
+MLIFILES:=trace/smtForm.mli\
   trace/smtAtom.mli
 
 -include $(addsuffix .d,$(MLIFILES))
@@ -278,13 +260,15 @@ beautify: $(VFILES:=.beautified)
 #                 #
 ###################
 
-$(CMXS): $(CMXA)
-	$(CAMLOPTLINK) $(ZFLAGS) -o $@ -linkall -linkpkg -shared $^
+CAMLLIBS?=bigarray.cmxa bytes.cmxa $(CAMLLIB)../batteries/batteries.cmxa
 
-$(CMXA): versions/standard/structures.cmx trace/smtMisc.cmx trace/coqTerms.cmx trace/smtForm.cmx trace/smtCertif.cmx trace/smtTrace.cmx trace/smtCnf.cmx trace/satAtom.cmx trace/smtAtom.cmx zchaff/satParser.cmx zchaff/zchaffParser.cmx zchaff/cnfParser.cmx zchaff/zchaff.cmx verit/smtlib2_util.cmx verit/smtlib2_ast.cmx verit/smtlib2_parse.cmx verit/smtlib2_lex.cmx lia/lia.cmx verit/veritSyntax.cmx verit/veritParser.cmx verit/veritLexer.cmx verit/smtlib2_genConstr.cmx verit/verit.cmx trace/smt_tactic.cmx dreal/error.cmx dreal/intv.cmx dreal/basic.cmx dreal/env.cmx dreal/ptree.cmx dreal/dparser.cmx dreal/dlexer.cmx dreal/dreal.cmx
+$(CMXS): $(CMXA)
+	$(CAMLOPTLINK) $(ZFLAGS) -o $@ -linkall -shared $(CAMLLIBS) $^
+
+$(CMXA): versions/standard/structures.cmx trace/smtMisc.cmx trace/coqTerms.cmx trace/smtForm.cmx trace/smtCertif.cmx trace/smtTrace.cmx trace/smtCnf.cmx trace/satAtom.cmx trace/smtAtom.cmx lia/lia.cmx dreal/error.cmx dreal/intv.cmx dreal/basic.cmx dreal/env.cmx dreal/ptree.cmx dreal/dparser.cmx dreal/dlexer.cmx dreal/dreal.cmx trace/smt_tactic.cmx 
 	$(CAMLOPTLINK) $(ZFLAGS) -a -o $@ $^
 
-ml: verit/veritParser.ml verit/veritLexer.ml verit/smtlib2_parse.ml verit/smtlib2_lex.ml dreal/dlexer.ml dreal/dparser.ml
+ml: dreal/dlexer.ml dreal/dparser.ml
 
 
 %.ml %.mli: %.mly
@@ -356,7 +340,7 @@ clean:
 	- rm -rf $(CMXA)
 	- rm -rf ml
 	- rm -rf test
-	- rm -f ../unit-tests/*.vo ../unit-tests/*.zlog ../unit-tests/*.vtlog verit/veritParser.mli verit/veritParser.ml verit/veritLexer.ml verit/smtlib2_parse.mli verit/smtlib2_parse.ml verit/smtlib2_lex.ml dreal/dparser.mli dreal/dparser.ml dreal/dlexer.ml
+	- rm -f ../unit-tests/*.vo ../unit-tests/*.zlog ../unit-tests/*.vtlog dreal/dparser.mli dreal/dparser.ml dreal/dlexer.ml
 
 archclean:
 	rm -f *.cmx *.o

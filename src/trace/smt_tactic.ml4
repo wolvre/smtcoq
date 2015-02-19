@@ -13,7 +13,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-
+(*
 VERNAC COMMAND EXTEND Parse_certif_zchaff
 | [ "Parse_certif_zchaff" 
     ident(dimacs) ident(trace) string(fdimacs) string(fproof) ] ->
@@ -45,6 +45,7 @@ VERNAC COMMAND EXTEND Parse_certif_verit
     Verit.theorem name fsmt fproof
   ]
 END
+*)
 
 VERNAC COMMAND EXTEND Parse_certif_dreal
 | [ "DReal_Checker" string(fdproof) ] ->
@@ -53,6 +54,7 @@ VERNAC COMMAND EXTEND Parse_certif_dreal
   ]
 END
 
+(*
 TACTIC EXTEND zchaff
 | [ "zchaff" ] -> [ Zchaff.tactic ]
 END
@@ -60,3 +62,4 @@ END
 TACTIC EXTEND verit
 | [ "verit" ] -> [ Verit.tactic ]
 END
+*)
