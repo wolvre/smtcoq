@@ -56,6 +56,14 @@ let cgtb = gen_constant z_modules "gtb"
 (* let ceqbZ = gen_constant z_modules "eqb" *)
 let ceqbZ = gen_constant [["Coq";"ZArith";"Zbool"]] "Zeq_bool"
 
+(* Q *)
+let q_modules = [["Coq"; "QArith"; "QArith_base"];
+		["Coq"; "QArith"; "Qreals"]]
+
+let cQ = gen_constant q_modules "Q"
+let cQ2R= gen_constant q_modules "Q2R"
+let cQmake = gen_constant q_modules "Qmake"
+
 (* R *)
 let r_modules = [["Coq";"Reals"]]
 
@@ -111,7 +119,8 @@ let smt_modules = [ ["SMTCoq";"Misc"];
 		    ["SMTCoq";"SMT_terms"];
 		    ["SMTCoq";"SMT_terms";"Typ"];
 		    ["SMTCoq";"SMT_terms";"Form"];
-		    ["SMTCoq";"SMT_terms";"Atom"]
+		    ["SMTCoq";"SMT_terms";"Atom"];
+		    ["SMTCoq";"dreal";"Icp";"Icp_Checker"]
 		  ]
 
 let cdistinct = gen_constant smt_modules "distinct"
@@ -182,6 +191,12 @@ let cFiff = gen_constant smt_modules "Fiff"
 let cFite = gen_constant smt_modules "Fite"
 
 let cis_true = gen_constant smt_modules "is_true"
+
+let cInterval = gen_constant smt_modules "interval"
+let cInan = gen_constant smt_modules "Inan"
+let cIlbnd = gen_constant smt_modules "Ilbnd"
+let cIubnd = gen_constant smt_modules "Iubnd"
+let cIbnd = gen_constant smt_modules "Ibnd"
 
 let make_certif_ops modules = 
  (gen_constant modules "step", 

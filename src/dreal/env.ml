@@ -126,20 +126,35 @@ let nminus (e1 : nt) (e2 : nt) : (nt list) =
 open CoqTerms
 open SmtMisc
 
-let q_module = ["Coq"; "QArith"]
-
-(*
-let coq_constant s =
-  Coqlib.gen_constant_in_modules "SMT" 
-    (Coqlib.init_modules @ Coqlib.arith_modules) s;;
- *)
-
 let to_coq (e : nt) =
-  let ctype = mklApp clist [| Lazy.force cR |] in
-  let num_to_coq n =
-    Coqlib.coq_constant "SMT" q_module (Num.to_string n) in
+  let ctype = mklApp clist [| Lazy.force cInterval |] in
+  let str_to_qstr n_str =
+    try
+      String.split n_str "/"
+    with Not_found ->
+      (n_str, "1") in
+  let str_to_coq n_str =
+    let (num_str, den_str) = str_to_qstr n_str in
+    let qnum = mkInt (int_of_string num_str) in
+    let qden = mkInt (int_of_string den_str) in
+    print_endline (n_str^" -> Q");
+    mklApp cQmake [| qnum; qden |]
+(* mklApp cQ2R [| q |]*) 
+  in
   let intv_to_coq {Intv.nlow = l; Intv.nhigh = h} =
-    mklApp cpair [| num_to_coq l; num_to_coq h |] in
+    let l_str = Num.to_string l in
+    let h_str = Num.to_string h in
+    print_endline ("["^l_str^","^h_str^"]");
+    if String.exists l_str "/0" then
+      if String.exists h_str "/0" then
+	mklApp cInan [| Lazy.force cInterval |]
+      else
+	mklApp cIubnd [| str_to_coq h_str |]
+    else
+      if String.exists h_str "/0" then
+	mklApp cIlbnd [| str_to_coq l_str |]
+      else
+	mklApp cIbnd [| str_to_coq l_str; str_to_coq h_str |] in
   List.fold_right 
     (fun h t -> mklApp ccons [| h; t|]) 
     (List.map (fun (_, nintv) -> intv_to_coq nintv) (to_nlist e))

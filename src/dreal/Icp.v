@@ -14,12 +14,14 @@
 (**************************************************************************)
 
 Require Import Reals.
+Require Import QArith.
 Require Import Bool.
 Require Import List.
 Require Import Int63.
 Require Import PArray.
 Require Import RingMicromega.
 Require Import ZMicromega.
+Require Import RMicromega.
 Require Import Tauto.
 Require Import Psatz.
 (* Add LoadPath ".." as SMTCoq. *)
@@ -31,12 +33,15 @@ Require Import SMTCoq.euf.Euf.
 
 Local Open Scope array_scope.
 Local Open Scope int63_scope.
-Local Open Scope R_scope.
+Local Open Scope Q_scope.
 
 Module Icp_Checker.
-
-  Inductive interval :=
-    | INTV (low:R) (high:R).
+  
+  Inductive interval : Set :=
+    | Inan : interval
+    | Ilbnd (l : Q) : interval
+    | Iubnd (u : Q) : interval
+    | Ibnd (l u : Q) : interval.
 
   Inductive step := 
     | ICP0 (intv: list interval)								(* an infeasible intv *)
