@@ -9,6 +9,7 @@ let num_of_axioms = ref 0
 let num_of_branches = ref 0                  (* DONE *)
 let num_of_non_trivial_pruning = ref 0       (* DONE *)
 let num_of_trivial_pruning = ref 0           (* DONE *)
+let num_of_pruning = ref 0
 
 type nenv = Env.nt
 type formula = Basic.formula
@@ -24,14 +25,15 @@ let reset_log() =
     num_of_branches := 0;                  (* DONE *)
     num_of_non_trivial_pruning := 0;       (* DONE *)
     num_of_trivial_pruning := 0;           (* DONE *)
+    num_of_pruning := 0;
   end
 
-let print_log out =
+let print_log fdproof out =
   begin
+    String.println out fdproof;
     String.println out ("Axioms            #: " ^ (string_of_int !num_of_axioms));
     String.println out ("Branches          #: " ^ (string_of_int !num_of_branches));
-    String.println out ("Trivial Prune     #: " ^ (string_of_int !num_of_trivial_pruning));
-    String.println out ("non-trivial Prune #: " ^ (string_of_int !num_of_non_trivial_pruning));
+    String.println out ("Prune             #: " ^ (string_of_int !num_of_pruning));
   end
 
 let extract_env p = match p with
@@ -99,19 +101,21 @@ let rec check out (pt : nt) (fl : formula list) =
 open CoqTerms
 open SmtMisc
 
-let icp_checker_modules = [ ["SMTCoq";"Icp";"ICP_Checker"] ]
+let icp_checker_modules = [ ["SMTCoq";"dreal";"Icp";"Icp_Checker"] ]
 
-let cchecker_icp0 = gen_constant icp_checker_modules "checker_icp0"
-let cchecker_icp1 = gen_constant icp_checker_modules "checker_icp1"
-let cchecker_icp2 = gen_constant icp_checker_modules "checker_icp2"
+let cchecker_icp0 = gen_constant icp_checker_modules "check_icp0"
+let cchecker_icp1 = gen_constant icp_checker_modules "check_icp1"
+let cchecker_icp2 = gen_constant icp_checker_modules "check_icp2"
 
 let rec to_smtcoq (pt : nt) (fl : formula list) =
   match pt with
   | Hole -> []
-  | NAxiom e -> [ mklApp cchecker_icp0 [| Env.to_coq e |] ]
+  | NAxiom e -> incr num_of_axioms; [ mklApp cchecker_icp0 [| Env.to_coq e |] ]
   | NBranch (nenv, pt1, pt2) ->  
      let env1 = extract_env pt1 in
      let env2 = extract_env pt2 in
+     incr num_of_branches;
      (mklApp cchecker_icp2 [| Env.to_coq nenv; Env.to_coq env1; Env.to_coq env2 |])::(List.append (to_smtcoq pt1 fl) (to_smtcoq pt2 fl))
   | NPrune (nenv1, nenv2, pt') ->
+     incr num_of_pruning;
      (mklApp cchecker_icp1 [| Env.to_coq nenv1; Env.to_coq nenv2 |])::(to_smtcoq pt' fl)

@@ -43,22 +43,47 @@ Module Icp_Checker.
     | Iubnd (u : Q) : interval
     | Ibnd (l u : Q) : interval.
 
+  Definition contains intv intv' :=
+    match intv', intv with
+    | _, Inan => true
+    | Inan, _ => false
+    | Ilbnd l', Ilbnd l => Qle_bool l l'
+    | Ilbnd l', Iubnd _ => true
+    | Ilbnd l', Ibnd l _ => Qle_bool l l'
+    | Iubnd _, Ilbnd _ => false
+    | Iubnd u', Iubnd u => Qle_bool u' u
+    | Iubnd u', Ibnd _ u => Qle_bool u' u
+    | Ibnd l' _, Ilbnd l => Qle_bool l l'
+    | Ibnd _ u', Iubnd u => Qle_bool u' u
+    | Ibnd l' u', Ibnd l u => (Qle_bool l l') && (Qle_bool u' u)
+    end.
+
   Inductive step := 
-    | ICP0 (intv: list interval)								(* an infeasible intv *)
-    | ICP1 (intv: list interval) (intv': list interval) 		      			(* intv' \subseteq intv *) 
-    | ICP2 (intv: list interval) (intv1: list interval) (intv2: list interval). 	(* intv \subseteq intv1 \cup intv2 *)
+    | ICP0 (e: list interval)								(* an infeasible e *)
+    | ICP1 (e: list interval) (e': list interval) 		      			(* e' \subseteq e *) 
+    | ICP2 (e: list interval) (e1: list interval) (e2: list interval). 	(* e \subseteq e1 \cup e2 *)
 
-  Definition check_icp0 (intv: list interval) := true.
+  Definition check_icp0 (e: list interval) := true.
   
-  Definition check_icp1 (intv intv': list interval) := true.
+  Fixpoint check_icp1 (e e': list interval) :=
+    match e, e' with
+    | nil, nil => true
+    | intv::t, intv'::t' => (contains intv intv') && (check_icp1 t t')
+    | _, _ => false
+    end.
 
-  Definition check_icp2 (intv intv1 intv2: list interval)  := true.
+  Fixpoint check_icp2 (e e1 e2: list interval)  :=
+    match e, e1, e2 with
+    | nil, nil, nil => true
+    | intv::t, intv1::t1, intv2::t2 => (contains intv intv1) && (contains intv intv2) && (check_icp2 t t1 t2)
+    | _, _, _ => false
+    end.
     
   Definition step_checker (st:step) :=	
     match st with
-    | ICP0 intv => check_icp0 intv
-    | ICP1 intv intv' => check_icp1 intv intv'
-    | ICP2 intv intv1 intv2 => check_icp2 intv intv1 intv2
+    | ICP0 e => check_icp0 e
+    | ICP1 e e' => check_icp1 e e'
+    | ICP2 e e1 e2 => check_icp2 e e1 e2
     end.
 
 End Icp_Checker.

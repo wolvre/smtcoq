@@ -21,7 +21,7 @@ let checker fdproof =
 	  try
 	    Global.set prec p;
 	    let _ = Ptree.to_smtcoq pt fs in
-	    Ptree.print_log stderr;
+	    Ptree.print_log fdproof stdout;
 	    Ptree.reset_log();
 	    num + 1
 	  with v ->
@@ -29,7 +29,7 @@ let checker fdproof =
 	     | Ptree.Error s -> print_endline s;
 	     | Basic.NOTINCOQ s -> print_endline (s^" is not yet supported!");
 	     | _ -> print_endline ("error "^(Printexc.to_string v)^" in proof no. "^(string_of_int (num+1))));
-	    Ptree.print_log stderr;
+	    Ptree.print_log fdproof stderr;
 	    Ptree.reset_log();
 	    num + 1
 	end in

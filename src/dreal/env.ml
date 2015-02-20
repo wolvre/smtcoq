@@ -126,6 +126,22 @@ let nminus (e1 : nt) (e2 : nt) : (nt list) =
 open CoqTerms
 open SmtMisc
 
+let rec pos_of_int i =
+  if i <= 1 then
+    Lazy.force cxH
+  else if i land 1 = 0 then
+    mklApp cxO [| pos_of_int (i lsr 1) |]
+  else
+    mklApp cxI [| pos_of_int (i lsr 1) |]
+
+let z_of_int i =
+  if i = 0 then
+    Lazy.force cZ0
+  else if i > 0 then
+    mklApp cZpos [| pos_of_int i |]
+  else
+    mklApp cZneg [| pos_of_int (- i) |]
+
 let to_coq (e : nt) =
   let ctype = mklApp clist [| Lazy.force cInterval |] in
   let str_to_qstr n_str =
@@ -135,16 +151,16 @@ let to_coq (e : nt) =
       (n_str, "1") in
   let str_to_coq n_str =
     let (num_str, den_str) = str_to_qstr n_str in
-    let qnum = mkInt (int_of_string num_str) in
-    let qden = mkInt (int_of_string den_str) in
-    print_endline (n_str^" -> Q");
+    let qnum = z_of_int (int_of_string num_str) in
+    let qden = pos_of_int (int_of_string den_str) in
+    (* print_endline (n_str^" -> Q"); *)
     mklApp cQmake [| qnum; qden |]
 (* mklApp cQ2R [| q |]*) 
   in
   let intv_to_coq {Intv.nlow = l; Intv.nhigh = h} =
     let l_str = Num.to_string l in
     let h_str = Num.to_string h in
-    print_endline ("["^l_str^","^h_str^"]");
+    (* print_endline ("["^l_str^","^h_str^"]"); *)
     if String.exists l_str "/0" then
       if String.exists h_str "/0" then
 	mklApp cInan [| Lazy.force cInterval |]
